@@ -1,0 +1,1663 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>Alkolender</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Bungee+Shade&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one night-blue column like a Tuborg J-dag label — gold-foil masthead, a wall of calendar doors, then section after section of beer statistics, all under falling snow. Single dark theme on purpose. */
+:root {
+  color-scheme: dark;
+  --night: #0a1433;
+  --panel: #101d42;
+  --raised: #182a5c;
+  --line: #2a3d73;
+  --snow: #eef3ff;
+  --muted: #a3b2d9;
+  --gold: #f5c451;
+  --gold-deep: #c8902a;
+  --red: #e5383b;
+  --pine: #2fa36b;
+  --foam: #fff7e0;
+  --beer: #e9a227;
+
+  --p-Helm: #3987e5;
+  --p-Schytte: #d95926;
+  --p-Peter: #199e70;
+  --p-AC: #c98500;
+  --p-Miller: #d55181;
+  --p-Magic: #9085e9;
+  --p-Oliver: #e66767;
+
+  --f-display: "Bungee", "Arial Black", Impact, sans-serif;
+  --f-shade: "Bungee Shade", "Bungee", "Arial Black", Impact, sans-serif;
+  --f-body: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+
+  --t-xs: 0.75rem; --t-sm: 0.875rem; --t-md: 1rem; --t-lg: 1.25rem; --t-xl: 1.75rem; --t-2xl: 2.5rem;
+  --r: 10px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--night);
+  color: var(--snow);
+  font: 400 var(--t-md)/1.55 var(--f-body);
+  -webkit-font-smoothing: antialiased;
+}
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+a { color: var(--gold); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+#snow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+#confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; }
+.page { position: relative; z-index: 1; }
+.wrap {
+  max-width: 1180px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30;
+  background: color-mix(in srgb, var(--night) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar .wrap { display: flex; gap: 14px; align-items: center; padding-block: 8px; }
+.brand { font-family: var(--f-display); color: var(--gold); text-decoration: none; font-size: var(--t-lg); letter-spacing: .02em; white-space: nowrap; }
+.nav { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.nav::-webkit-scrollbar { display: none; }
+.nav a { color: var(--muted); text-decoration: none; font-size: var(--t-sm); font-weight: 600; padding: 6px 10px; border-radius: 999px; white-space: nowrap; }
+.nav a:hover { color: var(--snow); background: var(--raised); }
+
+/* ---------- hero ---------- */
+.hero { padding-block: 48px 24px; }
+.hero-text { container-type: inline-size; min-width: 0; }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: center; }
+.eyebrow { font-family: var(--f-mono); font-size: var(--t-xs); letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
+.masthead {
+  font-family: var(--f-shade);
+  font-size: clamp(2rem, 10cqi, 7.5rem);
+  line-height: .95;
+  white-space: nowrap;
+  margin: 10px 0 14px;
+  background: linear-gradient(100deg, #b9832a 0%, #ffe39a 18%, #f5c451 32%, #fff4c9 46%, #c8902a 60%, #ffe08a 78%, #b9832a 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: foil 7s linear infinite;
+}
+@keyframes foil { to { background-position: -250% 0; } }
+.tagline { font-size: clamp(1.1rem, 2.6vw, 1.6rem); font-weight: 800; max-width: 34ch; margin: 0; }
+.tagline em { font-style: normal; color: var(--gold); }
+.countdown { margin-top: 18px; display: inline-flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; background: var(--red); color: #fff; padding: 10px 16px; border-radius: var(--r); box-shadow: 0 0 0 3px var(--night), 0 0 0 5px var(--red); }
+.countdown b { font-family: var(--f-display); font-weight: 400; font-size: var(--t-lg); }
+.countdown .num { font-size: var(--t-lg); }
+
+.glass-wrap { display: grid; justify-items: center; gap: 8px; }
+.glass {
+  position: relative; width: 150px; height: 230px;
+  clip-path: polygon(0 0, 100% 0, 88% 100%, 12% 100%);
+  background: linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.18) 30%, rgba(255,255,255,.05) 70%);
+  border-radius: 4px;
+}
+.glass .beer { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(180deg, #f6b73c, #d07f12); transition: height 1.6s cubic-bezier(.2,.8,.2,1); }
+.glass .foam { position: absolute; left: -10%; right: -10%; top: -16px; height: 22px; background: var(--foam); border-radius: 50% 50% 40% 40% / 70% 70% 30% 30%; box-shadow: 0 -4px 0 2px var(--foam); }
+.glass .bubble { position: absolute; bottom: 0; width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.55); animation: rise 3s linear infinite; }
+@keyframes rise { from { transform: translateY(0); opacity: .9; } to { transform: translateY(-190px); opacity: 0; } }
+.glass-label { font-family: var(--f-display); font-size: var(--t-2xl); color: var(--gold); line-height: 1; }
+.glass-sub { font-size: var(--t-xs); color: var(--muted); text-transform: uppercase; letter-spacing: .14em; }
+
+.stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; margin-top: 32px; background: var(--line); border: 2px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.stat { background: var(--panel); padding: 14px 16px; min-width: 0; }
+.stat .v { font-family: var(--f-display); font-size: clamp(1.4rem, 3.4vw, 2.2rem); line-height: 1.1; color: var(--snow); }
+.stat .k { font-size: var(--t-sm); color: var(--muted); }
+.stat .k small { display: block; font-size: var(--t-xs); opacity: .8; }
+
+/* ---------- filter bar ---------- */
+.filters { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 49px); z-index: 25; background: color-mix(in srgb, var(--night) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.filters .wrap { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding-block: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1.5px solid var(--line); background: var(--panel); color: var(--snow); border-radius: 999px; padding: 5px 12px; font-size: var(--t-sm); font-weight: 600; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.chip:hover { border-color: var(--gold); }
+.chip[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: var(--night); }
+.chip .dot { width: 9px; height: 9px; border-radius: 50%; }
+.sel { display: inline-flex; gap: 6px; align-items: center; font-size: var(--t-sm); color: var(--muted); }
+.sel select, .search { background: var(--panel); color: var(--snow); border: 1.5px solid var(--line); border-radius: 8px; padding: 6px 10px; font: 600 var(--t-sm) var(--f-body); }
+.reset { background: none; border: 0; color: var(--gold); text-decoration: underline; cursor: pointer; font-size: var(--t-sm); padding: 4px; }
+.fcount { margin-left: auto; font-size: var(--t-sm); color: var(--muted); }
+
+/* ---------- sections ---------- */
+section.block { padding-block: 56px 8px; scroll-margin-top: 120px; }
+.sec-head { display: grid; gap: 6px; margin-bottom: 22px; max-width: 70ch; }
+.sec-head h2 { font-family: var(--f-display); font-weight: 400; font-size: clamp(1.8rem, 5vw, 3rem); line-height: 1; color: var(--snow); }
+.sec-head h2 span { color: var(--gold); }
+.sec-head p { margin: 0; color: var(--muted); }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; min-width: 0; }
+.panel h3 { font-size: var(--t-lg); font-weight: 800; margin-bottom: 4px; }
+.panel .note { font-size: var(--t-sm); color: var(--muted); margin: 0 0 14px; }
+.empty { color: var(--muted); font-style: italic; padding: 12px 0; }
+
+/* ---------- calendar ---------- */
+.cal-tools { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; align-items: center; }
+.btn { background: var(--red); color: #fff; border: 0; border-radius: 8px; padding: 9px 16px; font-weight: 800; cursor: pointer; box-shadow: 0 3px 0 #8f1c1e; }
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #8f1c1e; }
+.btn.ghost { background: var(--raised); box-shadow: 0 3px 0 #0a1433; }
+.cal-year { margin-bottom: 30px; }
+.cal-year h3 { font-family: var(--f-display); font-weight: 400; font-size: var(--t-xl); color: var(--gold); margin-bottom: 10px; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.cal-year h3 small { font-family: var(--f-body); font-size: var(--t-sm); color: var(--muted); font-weight: 600; }
+.doors {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); grid-auto-rows: 104px; grid-auto-flow: dense; gap: 10px;
+  padding: 14px; border-radius: 14px;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(245,196,81,.10), transparent 40%),
+    repeating-linear-gradient(45deg, #13245a 0 14px, #112050 14px 28px);
+  border: 3px solid var(--gold-deep);
+  box-shadow: inset 0 0 0 3px var(--night), 0 10px 30px rgba(0,0,0,.35);
+}
+.door { position: relative; perspective: 700px; border: 0; padding: 0; background: none; cursor: pointer; min-width: 0; }
+.door.big { grid-column: span 2; grid-row: span 2; }
+.door.dim { opacity: .22; }
+.door .inside, .door .lid { position: absolute; inset: 0; border-radius: 8px; }
+.door .inside { background: var(--foam); color: var(--night); display: grid; align-content: center; justify-items: center; padding: 6px; text-align: center; gap: 2px; overflow: hidden; }
+.door .inside .score { font-family: var(--f-display); font-size: 1.6rem; line-height: 1; }
+.door.big .inside .score { font-size: 3.2rem; }
+.door .inside .nm { font-size: .7rem; font-weight: 800; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.door.big .inside .nm { font-size: .95rem; -webkit-line-clamp: 3; }
+.door .inside .who { font-size: .62rem; font-family: var(--f-mono); opacity: .75; }
+.door .lid {
+  transform-origin: left center; transition: transform .7s cubic-bezier(.3,1.4,.5,1);
+  background: var(--lid, var(--red));
+  border: 2px dashed rgba(255,255,255,.35);
+  display: grid; place-items: center; backface-visibility: hidden;
+  box-shadow: inset 0 0 0 4px rgba(0,0,0,.12);
+}
+.door .lid::after { content: ""; position: absolute; right: 8px; top: 50%; width: 7px; height: 7px; margin-top: -3px; border-radius: 50%; background: var(--gold); }
+.door .lid .d { font-family: var(--f-display); font-size: 2rem; color: #fff; text-shadow: 0 3px 0 rgba(0,0,0,.25); }
+.door.big .lid .d { font-size: 4.4rem; }
+.door .lid .adv { position: absolute; top: 6px; left: 0; right: 0; text-align: center; font-size: .6rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+.door.open .lid { transform: rotateY(-105deg); }
+.door:hover:not(.open) .lid { transform: rotateY(-14deg); }
+.door:focus-visible { outline-offset: 3px; }
+
+/* ---------- bars (html) ---------- */
+.bars { display: grid; gap: 8px; }
+.bar { display: grid; grid-template-columns: minmax(70px, 120px) minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: var(--t-sm); background: none; border: 0; padding: 2px 0; text-align: left; color: var(--snow); cursor: default; }
+button.bar { cursor: pointer; }
+button.bar:hover .track i { filter: brightness(1.2); }
+.bar .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.bar .track { position: relative; height: 18px; }
+.bar .track i { position: absolute; top: 0; bottom: 0; border-radius: 0 4px 4px 0; display: block; }
+.bar .track i.neg { border-radius: 4px 0 0 4px; }
+.bar .track .zero { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--muted); }
+.bar .val { font-family: var(--f-mono); font-variant-numeric: tabular-nums; color: var(--snow); min-width: 4.5ch; text-align: right; }
+.bar .val small { color: var(--muted); }
+
+/* ---------- lists ---------- */
+.rank { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.rank li > button { width: 100%; display: grid; grid-template-columns: 2.2rem minmax(0, 1fr) auto; gap: 10px; align-items: center; text-align: left; background: var(--raised); border: 0; border-radius: 6px; padding: 8px 10px; cursor: pointer; }
+.rank li > button:hover { background: #20356f; }
+.rank .pos { font-family: var(--f-display); color: var(--gold); font-size: var(--t-lg); text-align: center; }
+.rank .t { min-width: 0; }
+.rank .t b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank .t span { font-size: var(--t-xs); color: var(--muted); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank .s { font-family: var(--f-mono); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.rank .s small { display: block; font-size: var(--t-xs); color: var(--muted); font-weight: 400; }
+.shame .pos { color: var(--red); }
+.fame-title { display: flex; align-items: center; gap: 10px; }
+.medal { font-family: var(--f-display); font-size: var(--t-xs); padding: 3px 8px; border-radius: 4px; background: var(--gold); color: var(--night); }
+.medal.red { background: var(--red); color: #fff; }
+
+/* ---------- table ---------- */
+.tbl-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+.search { min-width: 0; width: 260px; max-width: 100%; }
+.tscroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); max-height: 620px; overflow-y: auto; }
+table { border-collapse: collapse; width: 100%; font-size: var(--t-sm); }
+th, td { padding: 7px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--line); }
+th { position: sticky; top: 0; background: var(--raised); font-weight: 800; cursor: pointer; user-select: none; z-index: 1; }
+th[aria-sort="ascending"]::after { content: " ▲"; color: var(--gold); }
+th[aria-sort="descending"]::after { content: " ▼"; color: var(--gold); }
+td.n, th.n { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+tbody tr { cursor: pointer; }
+tbody tr:hover td { background: var(--raised); }
+td.beer-name { max-width: 280px; overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
+td .hate { color: var(--red); font-weight: 800; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--t-xs); font-weight: 700; background: var(--raised); border: 1px solid var(--line); }
+.pdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+/* ---------- svg charts ---------- */
+.chart { width: 100%; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { fill: var(--muted); font: 11px var(--f-mono); }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .axis-title { fill: var(--muted); font: 600 12px var(--f-body); }
+.chart circle.pt { stroke: var(--panel); stroke-width: 2; cursor: pointer; transition: opacity .2s, r .15s; }
+.chart circle.pt:hover { r: 9; }
+.chart circle.pt.fade { opacity: .12; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.legend .chip { padding: 3px 10px; font-size: var(--t-xs); }
+
+/* ---------- matrix ---------- */
+.matrix { display: grid; gap: 3px; font-size: var(--t-xs); }
+.matrix .h { font-weight: 800; text-align: center; padding: 4px 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.matrix .rh { font-weight: 800; padding: 4px 6px; display: flex; align-items: center; }
+.matrix .c { border-radius: 4px; display: grid; place-items: center; font-family: var(--f-mono); aspect-ratio: 1.5; min-width: 0; color: var(--snow); }
+.matrix .c.self { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
+
+/* ---------- flags ---------- */
+.flags { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.flag { background: var(--raised); border: 0; border-radius: 8px; padding: 8px; text-align: left; cursor: pointer; display: grid; gap: 6px; min-width: 0; color: var(--snow); }
+.flag:hover { outline: 2px solid var(--gold); }
+.flag .fimg { aspect-ratio: 3/2; border-radius: 4px; background: var(--panel) center/cover no-repeat; display: grid; place-items: center; font-family: var(--f-display); color: var(--muted); font-size: 1.4rem; overflow: hidden; }
+.flag .fimg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.flag b { font-size: var(--t-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.flag .meter { display: flex; gap: 2px; }
+.flag .meter i { flex: 1; height: 6px; border-radius: 2px; background: var(--line); }
+.flag .meter i.on { background: var(--pine); }
+.flag small { font-size: var(--t-xs); color: var(--muted); }
+
+/* ---------- small multiples ---------- */
+.mults { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+
+/* ---------- bagmand cards ---------- */
+.bagcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.bagcard { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.bagcard header { display: flex; align-items: center; gap: 10px; }
+.bagcard .avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-display); color: #fff; font-size: var(--t-md); flex: none; }
+.bagcard h3 { font-size: var(--t-lg); font-weight: 800; }
+.bagcard .kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.bagcard .kv div { background: var(--raised); border-radius: 6px; padding: 6px 8px; }
+.bagcard .kv b { display: block; font-family: var(--f-mono); font-size: var(--t-lg); font-variant-numeric: tabular-nums; }
+.bagcard .kv span { font-size: var(--t-xs); color: var(--muted); }
+.pick { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: var(--t-sm); background: none; border: 0; padding: 4px 0; text-align: left; cursor: pointer; color: var(--snow); }
+.pick:hover b { text-decoration: underline; }
+.pick b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick .tag { font-size: var(--t-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; }
+.pick .tag.best { background: var(--pine); color: #fff; }
+.pick .tag.worst { background: var(--red); color: #fff; }
+
+/* ---------- modal ---------- */
+dialog { border: 0; padding: 0; background: transparent; color: var(--snow); max-width: min(560px, calc(100vw - 24px)); width: 100%; }
+dialog::backdrop { background: rgba(4, 9, 25, .78); backdrop-filter: blur(3px); }
+.card { background: var(--panel); border: 3px solid var(--gold-deep); border-radius: 16px; overflow: hidden; }
+.card-top { background: var(--red); padding: 18px 20px 16px; position: relative; display: grid; gap: 4px; }
+.card-top .when { font-family: var(--f-mono); font-size: var(--t-xs); letter-spacing: .1em; text-transform: uppercase; color: #ffe2e2; }
+.card-top h3 { font-family: var(--f-display); font-weight: 400; font-size: clamp(1.3rem, 5vw, 1.9rem); line-height: 1.1; padding-right: 70px; }
+.card-top .brew { color: #ffe2e2; font-weight: 600; }
+.card-top .big { position: absolute; right: 16px; top: 14px; width: 66px; height: 66px; border-radius: 50%; background: var(--foam); color: var(--night); display: grid; place-items: center; font-family: var(--f-display); font-size: 1.4rem; box-shadow: 0 0 0 4px var(--gold); }
+.card-body { padding: 16px 20px 20px; display: grid; gap: 14px; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px; }
+.facts .pill { font-size: var(--t-sm); }
+.rbars { display: grid; gap: 6px; }
+.rbar { display: grid; grid-template-columns: 70px minmax(0, 1fr) 3.2rem; gap: 10px; align-items: center; font-size: var(--t-sm); }
+.rbar .tr { height: 16px; background: var(--raised); border-radius: 4px; position: relative; overflow: hidden; }
+.rbar .tr i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: linear-gradient(90deg, var(--beer), #f6c45a); }
+.rbar .tr i::after { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 6px; background: var(--foam); border-radius: 0 4px 4px 0; }
+.rbar.hater .tr i { background: linear-gradient(90deg, #8f1c1e, var(--red)); }
+.rbar .v { font-family: var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
+
+.card-foot { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
+.card-nav { display: flex; gap: 8px; }
+.x { position: absolute; top: 8px; right: 8px; }
+.stamp { position: fixed; left: 50%; top: 40%; z-index: 70; transform: translate(-50%, -50%) rotate(-12deg) scale(.2); font-family: var(--f-display); font-size: clamp(3rem, 14vw, 8rem); color: var(--gold); text-shadow: 0 6px 0 var(--red), 0 0 40px rgba(245,196,81,.6); opacity: 0; pointer-events: none; transition: transform .45s cubic-bezier(.2,1.6,.4,1), opacity .3s; }
+.stamp.go { transform: translate(-50%, -50%) rotate(-12deg) scale(1); opacity: 1; }
+
+/* ---------- live year: entry + export ---------- */
+.live { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; }
+.live .pulse { display: inline-flex; gap: 8px; align-items: center; font-size: var(--t-sm); font-weight: 600; color: var(--muted); }
+.live .pulse::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--pine); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(47,163,107,.6); } 70%, 100% { box-shadow: 0 0 0 9px rgba(47,163,107,0); } }
+.btn.gold { background: var(--gold); color: var(--night); box-shadow: 0 3px 0 var(--gold-deep); }
+.btn.gold:active { box-shadow: 0 1px 0 var(--gold-deep); }
+.btn[disabled] { opacity: .5; cursor: default; }
+.livetag { font-family: var(--f-mono); font-size: var(--t-xs); background: var(--pine); color: #fff; padding: 2px 8px; border-radius: 4px; letter-spacing: .12em; align-self: center; }
+.door.todo .lid { background: color-mix(in srgb, var(--lid) 40%, var(--night)); border-color: rgba(245,196,81,.5); }
+.door.todo .lid .d { opacity: .75; }
+.door.todo .lid .adv { top: auto; bottom: 7px; color: var(--gold); }
+.door.todo[disabled] { cursor: default; }
+.door.todo[disabled]:hover .lid { transform: none; }
+#entryDlg, #exportDlg { max-height: calc(100dvh - 24px); overflow-y: auto; }
+.form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.form .full { grid-column: 1 / -1; }
+.fld { display: grid; gap: 4px; font-size: var(--t-xs); color: var(--muted); font-weight: 600; min-width: 0; }
+.fld input, .fld select, .rate select, .export textarea { width: 100%; min-width: 0; background: var(--night); color: var(--snow); border: 1.5px solid var(--line); border-radius: 8px; padding: 8px 10px; font: 600 var(--t-sm) var(--f-body); }
+.fld input:focus, .fld select:focus, .rate select:focus, .export textarea:focus { border-color: var(--gold); outline: none; }
+.fld input[aria-invalid="true"] { border-color: var(--red); }
+.check { display: flex; gap: 8px; align-items: center; font-size: var(--t-sm); font-weight: 600; color: var(--snow); cursor: pointer; }
+.check input { accent-color: var(--gold); width: 18px; height: 18px; margin: 0; }
+.form-h { font-family: var(--f-display); font-weight: 400; font-size: var(--t-md); color: var(--gold); margin: 4px 0 -4px; }
+.rates { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.rate { display: grid; gap: 4px; background: var(--raised); border-radius: 8px; padding: 8px; font-size: var(--t-sm); font-weight: 700; }
+.rate.hater { box-shadow: inset 0 0 0 2px var(--red); }
+.form-note { font-size: var(--t-sm); color: var(--muted); margin: 0; }
+.form-note b { color: var(--red); }
+.form-msg { font-size: var(--t-sm); font-weight: 600; min-height: 1.4em; color: var(--muted); }
+.form-msg.err { color: #ff9a9c; }
+.form-msg.ok { color: #5fd39b; }
+.export textarea { font: 400 var(--t-xs)/1.5 var(--f-mono); white-space: pre; overflow: auto; resize: vertical; }
+@media (max-width: 480px) { .form { grid-template-columns: 1fr; } }
+
+/* ---------- tooltip ---------- */
+#tip { position: fixed; z-index: 80; pointer-events: none; background: var(--snow); color: var(--night); border-radius: 8px; padding: 8px 10px; font-size: var(--t-sm); max-width: 260px; box-shadow: 0 8px 24px rgba(0,0,0,.4); opacity: 0; transition: opacity .12s; }
+#tip.on { opacity: 1; }
+#tip b { display: block; }
+#tip .m { font-family: var(--f-mono); font-size: var(--t-xs); }
+
+footer { padding-block: 60px 40px; color: var(--muted); font-size: var(--t-sm); }
+footer .wrap { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 24px; }
+footer .sign { font-family: var(--f-display); color: var(--gold); font-size: var(--t-xl); }
+
+@media (max-width: 900px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats .stat:last-child { grid-column: span 2; }
+  .grid3 { grid-template-columns: 1fr; }
+  .mults { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .hero .wrap { grid-template-columns: 1fr; }
+  .glass-wrap { grid-auto-flow: column; justify-content: start; align-items: end; gap: 16px; }
+  .glass { width: 90px; height: 140px; }
+  .grid2 { grid-template-columns: 1fr; }
+  .filters { position: static; }
+  .doors { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); grid-auto-rows: 82px; gap: 8px; padding: 10px; }
+  .door .lid .d { font-size: 1.5rem; }
+  .door.big .lid .d { font-size: 3rem; }
+  .door .inside .score { font-size: 1.2rem; }
+  .door .inside .nm { font-size: .6rem; }
+  .fcount { margin-left: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+}
+</style>
+
+<canvas id="snow" aria-hidden="true"></canvas>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="stamp" id="stamp" aria-hidden="true">SKÅL!</div>
+<div id="tip" role="tooltip"></div>
+
+<div class="page">
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="#top">ALKOLENDER</a>
+      <nav class="nav" aria-label="Sektioner">
+        <a href="#kalender">Kalenderen</a>
+        <a href="#hitliste">Hitlisten</a>
+        <a href="#hater">Haterbarometret</a>
+        <a href="#smag">Smagsmakkerne</a>
+        <a href="#bagmand">Bagmændene</a>
+        <a href="#stil">Stilarter</a>
+        <a href="#alkometer">Alkometeret</a>
+        <a href="#pris">Prisjusteret</a>
+        <a href="#quiz">Flagquizzen</a>
+        <a href="#aar">År for år</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero" id="top">
+    <div class="wrap">
+      <div class="hero-text">
+        <div class="eyebrow">Øljulekalenderen · <span id="yearSpan"></span></div>
+        <h1 class="masthead">ALKOLENDER</h1>
+        <p class="tagline" id="tagline"></p>
+        <div class="countdown" id="countdown"></div>
+        <div class="live" id="live" hidden>
+          <span class="pulse" id="liveStatus"></span>
+          <button class="btn gold" type="button" id="addBtn" hidden>＋ Registrér øl</button>
+          <button class="btn ghost" type="button" id="exportBtn" hidden>Til Excel</button>
+          <button class="btn gold" type="button" id="loginBtn" hidden>Log ind med Google</button>
+          <button class="reset" type="button" id="logoutBtn" hidden>Log ud</button>
+        </div>
+      </div>
+      <div class="glass-wrap" aria-label="Gennemsnitlig rating som et glas øl">
+        <div class="glass" id="glass"><div class="beer" id="beerFill"><div class="foam"></div></div></div>
+        <div>
+          <div class="glass-label num" id="glassLabel">–</div>
+          <div class="glass-sub">snit-rating ud af 5</div>
+        </div>
+      </div>
+    </div>
+    <div class="wrap"><div class="stats" id="stats"></div></div>
+  </section>
+
+  <div class="filters" role="region" aria-label="Filtre">
+    <div class="wrap">
+      <div class="chips" id="yearChips" role="group" aria-label="År"></div>
+      <label class="sel">Bagmand
+        <select id="bagSel"><option value="">Alle</option></select>
+      </label>
+      <label class="sel">Stil
+        <select id="typeSel"><option value="">Alle</option></select>
+      </label>
+      <button class="reset" id="resetBtn" type="button">Nulstil</button>
+      <span class="fcount" id="fcount"></span>
+    </div>
+  </div>
+
+  <main>
+    <section class="block" id="kalender">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">Låge for låge</div>
+          <h2>Kalender<span>en</span></h2>
+          <p>Hver låge er en dag og en øl. Klik for at åbne den og se hvem der købte den, hvem der hadede den, og hvad alle gav. Stjernelåger er adventssøndage. Lågerne i det levende år åbner I selv: klik på dagens låge og registrér øllen.</p>
+        </div>
+        <div class="cal-tools">
+          <button class="btn" id="openAll" type="button">Åbn alle låger</button>
+          <button class="btn ghost" id="closeAll" type="button">Luk dem igen</button>
+        </div>
+        <div id="calendars"></div>
+      </div>
+    </section>
+
+    <section class="block" id="hitliste">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">Gennemsnit af alle ratings</div>
+          <h2>Hit<span>listen</span></h2>
+          <p>De bedste og de værste. Ratings er på skalaen 0–5 i kvarte point, og snittet tæller kun dem der var til stede.</p>
+        </div>
+        <div class="grid2">
+          <div class="panel">
+            <h3 class="fame-title"><span class="medal">Hall of Fame</span></h3>
+            <ol class="rank" id="fame"></ol>
+          </div>
+          <div class="panel">
+            <h3 class="fame-title"><span class="medal red">Hall of Shame</span></h3>
+            <ol class="rank shame" id="shame"></ol>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:20px">
+          <div class="tbl-tools">
+            <h3>Alle øl</h3>
+            <input class="search" id="search" type="search" placeholder="Søg øl eller bryggeri…" aria-label="Søg øl eller bryggeri">
+          </div>
+          <div class="tscroll"><table id="table"></table></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="hater">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">Hvem er den sure gamle mand?</div>
+          <h2>Hater<span>barometret</span></h2>
+          <p>Dagens Hater er den der gav dagens laveste rating, og for øl registreret her på siden regnes titlen ud automatisk (deler flere den laveste, deler de titlen). Strenghed måler hvor meget lavere (eller højere) end de andre man i snit rater den samme øl.</p>
+        </div>
+        <div class="grid2">
+          <div class="panel">
+            <h3>Strenghed</h3>
+            <p class="note">Egen rating minus de andres snit på samme øl. Til venstre: hateren.</p>
+            <div class="bars" id="harsh"></div>
+          </div>
+          <div class="panel">
+            <h3>Dagens Hater</h3>
+            <p class="note">Antal dage som dagens laveste rating, og andel af de dage man var med.</p>
+            <div class="bars" id="haterCount"></div>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:20px">
+          <div class="panel">
+            <h3>Kæmpe-hater-øjeblikke</h3>
+            <p class="note">Største afstand ned til de andres snit.</p>
+            <ol class="rank shame" id="bigHate"></ol>
+          </div>
+          <div class="panel">
+            <h3>Ensomme elskere</h3>
+            <p class="note">Største afstand op over de andres snit.</p>
+            <ol class="rank" id="bigLove"></ol>
+          </div>
+          <div class="panel">
+            <h3>Mest splittende øl</h3>
+            <p class="note">Største spænd mellem højeste og laveste rating.</p>
+            <ol class="rank" id="split"></ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="smag">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">Hvem har samme gane?</div>
+          <h2>Smags<span>makkerne</span></h2>
+          <p>Gennemsnitlig uenighed i point mellem to personer på de øl de begge har ratet. Jo lavere tal og stærkere farve, jo mere enige.</p>
+        </div>
+        <div class="grid2">
+          <div class="panel"><div class="matrix" id="matrix"></div></div>
+          <div class="panel">
+            <h3>Personlige snit</h3>
+            <p class="note">Gennemsnitlig rating givet af hver person.</p>
+            <div class="bars" id="personAvg"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="bagmand">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">Hvem køber godt ind?</div>
+          <h2>Bag<span>mændene</span></h2>
+          <p>Bagmanden er den der stod for dagens øl. Kortene er sorteret efter hvor godt deres øl blev modtaget.</p>
+        </div>
+        <div class="bagcards" id="bagcards"></div>
+      </div>
+    </section>
+
+    <section class="block" id="stil">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">Sour, stout eller noget helt tredje</div>
+          <h2>Stil<span>arter</span></h2>
+          <p>Snit-rating pr. stil. Klik på en stil for at filtrere hele siden.</p>
+        </div>
+        <div class="grid2">
+          <div class="panel">
+            <h3>Snit pr. stil</h3>
+            <p class="note">Tallet i parentes er antal øl.</p>
+            <div class="bars" id="styleBars"></div>
+          </div>
+          <div class="panel">
+            <h3>Understil</h3>
+            <p class="note">Type 2 inden for stilene, efter antal.</p>
+            <div class="bars" id="subBars"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="alkometer">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">Procenter og genstande</div>
+          <h2>Alko<span>meteret</span></h2>
+          <p>Bliver øllen bedre af at være stærk? En genstand er 12 gram ren alkohol, og alle øl er regnet som 33 cl.</p>
+        </div>
+        <div class="grid2">
+          <div class="panel">
+            <h3>Alkohol mod rating</h3>
+            <p class="note">Én prik pr. øl, farvet efter bagmand. Klik på et navn for at fremhæve.</p>
+            <div class="legend" id="abvLegend"></div>
+            <div class="chart" id="abvChart"></div>
+          </div>
+          <div class="grid2" style="grid-template-columns:1fr">
+            <div class="panel">
+              <h3>Genstande pr. person</h3>
+              <p class="note">Summen af genstande for de øl man har ratet.</p>
+              <div class="bars" id="units"></div>
+            </div>
+            <div class="panel">
+              <h3>De stærkeste</h3>
+              <ol class="rank" id="strong"></ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="pris">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">Kroner og øre</div>
+          <h2>Pris<span>justeret</span></h2>
+          <p>Får man mere øl-glæde for flere penge? Kroner pr. point er prisen delt med snit-ratingen, så lavt er godt.</p>
+        </div>
+        <div class="grid2">
+          <div class="panel">
+            <h3>Pris mod rating</h3>
+            <p class="note">Øl uden registreret pris er udeladt.</p>
+            <div class="legend" id="priceLegend"></div>
+            <div class="chart" id="priceChart"></div>
+          </div>
+          <div class="grid2" style="grid-template-columns:1fr">
+            <div class="panel">
+              <h3>Bedste køb</h3>
+              <ol class="rank" id="value"></ol>
+            </div>
+            <div class="panel">
+              <h3>Dyreste skuffelser</h3>
+              <ol class="rank shame" id="pricey"></ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="quiz">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">2025 · Bagmanden vælger et land</div>
+          <h2>Flag<span>quizzen</span></h2>
+          <p>I 2025 fulgte hver øl et flag, og resten skulle gætte landet. Bagmanden gætter ikke på sit eget.</p>
+        </div>
+        <div id="quizBody"></div>
+      </div>
+    </section>
+
+    <section class="block" id="aar">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">Udviklingen</div>
+          <h2>År <span>for år</span></h2>
+          <p>Bliver vi bedre til at købe øl, eller bare mere generøse? Viser alle år, med bagmand- og stilfiltret.</p>
+        </div>
+        <div class="mults" id="mults"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="sign">Skål og glædelig jul!</div>
+      <div>Data fra Julekalender data.xlsx, og det levende år direkte fra siden. Liter og genstande er regnet med 33 cl pr. øl. Øl uden pris eller procent tæller ikke med i de tal.</div>
+    </div>
+  </footer>
+</div>
+
+<dialog id="dlg" aria-label="Øl-detaljer"><div id="dlgBody"></div></dialog>
+
+<dialog id="entryDlg" aria-labelledby="entryTitle">
+  <form class="card" id="entryForm" novalidate>
+    <div class="card-top">
+      <div class="when" id="entryMode">Ny øl</div>
+      <h3 id="entryTitle">Registrér øl</h3>
+      <div class="brew">Udfyld det I ved. Alle kan rette og rate bagefter.</div>
+    </div>
+    <div class="card-body">
+      <div class="form">
+        <label class="fld">Dato<input type="date" id="fDate" required></label>
+        <label class="fld">Øl nr.<input type="text" id="fN" inputmode="numeric" maxlength="3" autocomplete="off"></label>
+        <label class="check full"><input type="checkbox" id="fAdv"> Adventsøl (søndagens ekstra øl, ud over dagens låge)</label>
+        <label class="fld full">Øl<input type="text" id="fName" required maxlength="200" autocomplete="off"></label>
+        <label class="fld full">Bryggeri<input type="text" id="fBrew" maxlength="200" list="dlBrew" autocomplete="off"></label>
+        <label class="fld">Stil<input type="text" id="fType" maxlength="60" list="dlType" autocomplete="off"></label>
+        <label class="fld">Understil<input type="text" id="fType2" maxlength="60" list="dlType2" autocomplete="off"></label>
+        <label class="fld">Procent<input type="text" id="fAbv" inputmode="decimal" maxlength="6" placeholder="fx 6,5" autocomplete="off"></label>
+        <label class="fld">Pris i kr<input type="text" id="fPrice" inputmode="decimal" maxlength="8" autocomplete="off"></label>
+        <label class="fld">Bagmand<select id="fBag"></select></label>
+        <label class="fld">Untappd-link<input type="url" id="fUrl" maxlength="500" placeholder="https://untappd.com/b/…" autocomplete="off"></label>
+      </div>
+      <h4 class="form-h">Ratings</h4>
+      <div class="rates" id="fRates"></div>
+      <p class="form-note" id="fHater"></p>
+      <div class="form-msg" id="fMsg" role="status"></div>
+      <div class="card-foot">
+        <button class="btn ghost" type="button" id="fDel" hidden>Slet øl</button>
+        <div class="card-nav">
+          <button class="btn ghost" type="button" id="fCancel">Annullér</button>
+          <button class="btn gold" type="submit" id="fSave">Gem</button>
+        </div>
+      </div>
+    </div>
+  </form>
+  <datalist id="dlBrew"></datalist><datalist id="dlType"></datalist><datalist id="dlType2"></datalist>
+</dialog>
+
+<dialog id="exportDlg" aria-labelledby="exportTitle">
+  <div class="card">
+    <div class="card-top">
+      <div class="when">Til Julekalender data.xlsx</div>
+      <h3 id="exportTitle">Eksportér <span id="xYear"></span></h3>
+      <div class="brew">Én række pr. øl i regnearkets kolonner. Stil markøren i kolonne A på første tomme række og indsæt.</div>
+    </div>
+    <div class="card-body export">
+      <div class="form">
+        <label class="fld">Format<select id="xFmt"><option value="da">Dansk Excel (komma, 01-12-2026)</option><option value="en">Engelsk Excel (punktum, 2026-12-01)</option></select></label>
+        <label class="check"><input type="checkbox" id="xHead"> Med overskrifter</label>
+      </div>
+      <textarea id="xText" rows="8" readonly spellcheck="false" aria-label="Rækker til Excel"></textarea>
+      <p class="form-note">Ved delt laveste rating kommer kun den første med i kolonnen Dagens Hater.</p>
+      <div class="form-msg" id="xMsg" role="status"></div>
+      <div class="card-foot"><span></span>
+        <div class="card-nav">
+          <button class="btn ghost" type="button" id="xClose">Luk</button>
+          <button class="btn gold" type="button" id="xCopy">Kopiér</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<script>
+const DATA = {"people":["Helm","Schytte","Peter","AC","Miller","Magic","Oliver"],"beers":[{"y":2022,"d":"2022-12-01","adv":false,"n":10,"name":"Comfort Settings","brew":"Verdant Brewing Co.","price":72.0,"type":"IPA","type2":"Double","abv":0.08,"land":null,"url":"https://untappd.com/b/verdant-brewing-co-comfort-settings/3275012","bag":"Peter","r":{"Helm":3.75,"Schytte":3.0,"Peter":3.75,"AC":3.5},"hater":"Schytte","g":null,"flag":null},{"y":2022,"d":"2022-12-02","adv":false,"n":18,"name":"Show Me What You Got","brew":"Flying Couch Brewing","price":52.0,"type":"IPA","type2":null,"abv":0.06,"land":null,"url":"https://untappd.com/b/flying-couch-brewing-show-me-what-you-got/5111441","bag":"Schytte","r":{"Helm":3.0,"Schytte":2.75,"Peter":3.0,"AC":3.0},"hater":"Schytte","g":null,"flag":null},{"y":2022,"d":"2022-12-03","adv":false,"n":23,"name":"3 Bean Stout","brew":"LERVIG","price":40.0,"type":"Stout","type2":null,"abv":0.12,"land":null,"url":"https://untappd.com/b/lervig-3-bean-stout/1145082","bag":"AC","r":{"Helm":2.5,"Schytte":4.25,"Peter":4.25,"AC":4.25},"hater":"Helm","g":null,"flag":null},{"y":2022,"d":"2022-12-04","adv":false,"n":16,"name":"Citrontærtesour","brew":"Thyras Bryg","price":48.0,"type":"Sour","type2":"Pastry","abv":0.055,"land":null,"url":"https://untappd.com/b/thyras-bryg-citrontaertesour/4957168","bag":"Schytte","r":{"Helm":2.75,"Schytte":2.5,"Peter":2.25,"AC":2.5},"hater":"Peter","g":null,"flag":null},{"y":2022,"d":"2022-12-05","adv":false,"n":11,"name":"Brooklyn East IPA","brew":"Brooklyn Brewery","price":16.0,"type":"IPA","type2":null,"abv":0.069,"land":null,"url":"https://untappd.com/b/brooklyn-brewery-brooklyn-east-ipa/1826","bag":"Peter","r":{"Helm":3.0,"Schytte":3.25,"Peter":3.0,"AC":3.25},"hater":"Helm","g":null,"flag":null},{"y":2022,"d":"2022-12-06","adv":false,"n":9,"name":"Slam Dunk","brew":"Salikatt Bryggeri","price":56.0,"type":"IPA","type2":"Double","abv":0.08,"land":null,"url":"https://untappd.com/b/salikatt-bryggeri-slam-dunk/3718058","bag":"Peter","r":{"Helm":3.75,"Schytte":4.0,"Peter":4.25,"AC":3.75},"hater":"Helm","g":null,"flag":null},{"y":2022,"d":"2022-12-07","adv":false,"n":6,"name":"Skeleton Pre Party","brew":"Fermenterarna","price":70.0,"type":"Sour","type2":"Gose","abv":0.06,"land":null,"url":"https://untappd.com/b/fermenterarna-skeleton-pre-party/4515420","bag":"Helm","r":{"Helm":4.0,"Schytte":4.25,"Peter":4.0,"AC":3.75},"hater":"AC","g":null,"flag":null},{"y":2022,"d":"2022-12-08","adv":false,"n":1,"name":"Mælkeskæg","brew":"Too Old To Die Young Brewery","price":55.0,"type":"IPA","type2":"Double","abv":0.08,"land":null,"url":"https://untappd.com/b/too-old-to-die-young-brewing-co-maelkeskaeg/5042504","bag":"Helm","r":{"Helm":3.5,"Schytte":4.0,"Peter":3.75,"AC":2.75},"hater":"AC","g":null,"flag":null},{"y":2022,"d":"2022-12-09","adv":false,"n":4,"name":"Gelateria Gelato Summer Gose","brew":"To Øl","price":45.0,"type":"Sour","type2":"Gose","abv":0.06,"land":null,"url":"https://untappd.com/b/to-ol-gelateria-gelato-summer-gose/4821130","bag":"Helm","r":{"Helm":4.75,"Schytte":3.75,"Peter":4.25,"AC":4.0},"hater":"Schytte","g":null,"flag":null},{"y":2022,"d":"2022-12-10","adv":false,"n":21,"name":"Euphoric Fros'e","brew":"Kings Brewing Company","price":50.0,"type":"Sour","type2":"Pastry","abv":0.07,"land":null,"url":"https://untappd.com/b/kings-brewing-company-euphoric-fros-e/4194726","bag":"AC","r":{"Helm":3.75,"Schytte":4.0,"Peter":4.25,"AC":4.0},"hater":"Helm","g":null,"flag":null},{"y":2022,"d":"2022-12-11","adv":false,"n":7,"name":"Gouden Carolus Christmas / Noël","brew":"Brouwerij Het Anker","price":30.0,"type":"Ale","type2":null,"abv":0.105,"land":null,"url":"https://untappd.com/b/brouwerij-het-anker-gouden-carolus-christmas-noel/1579","bag":"Peter","r":{"Helm":3.0,"Schytte":2.75,"Peter":3.75,"AC":3.0},"hater":"Schytte","g":null,"flag":null},{"y":2022,"d":"2022-12-12","adv":false,"n":22,"name":"Where the F*** is Ayr?","brew":"Willibald Farm Brewery","price":46.0,"type":"IPA","type2":"Triple","abv":0.102,"land":null,"url":"https://untappd.com/b/willibald-farm-brewery-where-the-f-is-ayr/3825294","bag":"AC","r":{"Helm":2.0,"Schytte":2.25,"Peter":3.25,"AC":3.25},"hater":"Helm","g":null,"flag":null},{"y":2022,"d":"2022-12-13","adv":false,"n":8,"name":"Steinitz","brew":"Buxton Brewery","price":63.0,"type":"Porter","type2":null,"abv":0.14,"land":null,"url":"https://untappd.com/b/buxton-brewery-steinitz/4041035","bag":"Peter","r":{"Helm":2.75,"Schytte":4.0,"Peter":4.25,"AC":3.5},"hater":"Helm","g":null,"flag":null},{"y":2022,"d":"2022-12-14","adv":false,"n":5,"name":"Pêche / Pêcheresse","brew":"Brouwerij Lindemans","price":40.0,"type":"Lambic","type2":null,"abv":0.025,"land":null,"url":"https://untappd.com/b/brouwerij-lindemans-peche-pecheresse/2327","bag":"Helm","r":{"Helm":3.75,"Schytte":3.0,"Peter":3.25,"AC":3.5},"hater":"Schytte","g":null,"flag":null},{"y":2022,"d":"2022-12-15","adv":false,"n":15,"name":"Classic 110","brew":"Harboes Bryggeri","price":5.0,"type":"Lager","type2":null,"abv":0.046,"land":null,"url":"https://untappd.com/b/harboes-bryggeri-classic-110/83223","bag":"Schytte","r":{"Helm":2.0,"Schytte":5.0,"Peter":0.75,"AC":1.0},"hater":"Peter","g":null,"flag":null},{"y":2022,"d":"2022-12-16","adv":false,"n":17,"name":"Riff (By Dregen)","brew":"Sudden Death Brewing Co.","price":59.0,"type":"IPA","type2":null,"abv":0.068,"land":null,"url":"https://untappd.com/b/sudden-death-brewing-co-riff-by-dregen/5011249","bag":"Schytte","r":{"Helm":3.75,"Schytte":3.5,"Peter":3.25,"AC":3.75},"hater":"Peter","g":null,"flag":null},{"y":2022,"d":"2022-12-17","adv":false,"n":24,"name":"Kaizen","brew":"Hudson Valley Brewery","price":57.0,"type":"IPA","type2":"Sour","abv":0.06,"land":null,"url":"https://untappd.com/b/hudson-valley-brewery-kaizen/3113326","bag":"AC","r":{"Helm":4.5,"Schytte":4.0,"Peter":4.0,"AC":4.0},"hater":"Schytte","g":null,"flag":null},{"y":2022,"d":"2022-12-18","adv":false,"n":14,"name":"Keine Hexerei","brew":"Frederikshavn Bryghus","price":100.0,"type":"Ale","type2":null,"abv":0.19,"land":null,"url":"https://untappd.com/b/frederikshavn-bryghus-keine-hexerei/3965978","bag":"Schytte","r":{"Helm":2.75,"Schytte":3.5,"Peter":3.25,"AC":3.25},"hater":"Helm","g":null,"flag":null},{"y":2022,"d":"2022-12-19","adv":false,"n":20,"name":"Little Daughter And the Grizzlies","brew":"Mason Ale Works","price":50.0,"type":"Stout","type2":"Pastry","abv":0.135,"land":null,"url":"https://untappd.com/b/mason-ale-works-little-daughter-and-the-grizzlies/4225150","bag":"AC","r":{"Helm":3.5,"Schytte":4.0,"Peter":4.0,"AC":4.25},"hater":"Helm","g":null,"flag":null},{"y":2022,"d":"2022-12-20","adv":false,"n":12,"name":"Doo","brew":"Neon Raptor Brewing Co.","price":75.0,"type":"Sour","type2":"Fruited","abv":0.1,"land":null,"url":"https://untappd.com/b/neon-raptor-brewing-co-doo/4965686","bag":"Peter","r":{"Helm":3.75,"Schytte":3.25,"Peter":3.5,"AC":3.5},"hater":"Schytte","g":null,"flag":null},{"y":2022,"d":"2022-12-21","adv":false,"n":2,"name":"Corona Extra","brew":"Grupo Modelo","price":12.5,"type":"Lager","type2":"Mexican","abv":0.045,"land":null,"url":"https://untappd.com/b/grupo-modelo-corona-extra/5848","bag":"Helm","r":{"Helm":3.25,"Schytte":2.5,"Peter":2.25,"AC":3.0},"hater":"Peter","g":null,"flag":null},{"y":2022,"d":"2022-12-22","adv":false,"n":19,"name":"Pillow Stacks","brew":"Outer Range Brewing Co.","price":40.0,"type":"IPA","type2":"Double","abv":0.076,"land":null,"url":"https://untappd.com/b/outer-range-brewing-co-pillow-stacks/2565726","bag":"AC","r":{"Helm":3.0,"Schytte":3.25,"Peter":3.75,"AC":3.5},"hater":"Helm","g":null,"flag":null},{"y":2022,"d":"2022-12-23","adv":false,"n":13,"name":"Pink Lady","brew":"Bryggeriet Skands","price":25.0,"type":"Sour","type2":"Gose","abv":0.05,"land":null,"url":"https://untappd.com/b/bryggeriet-skands-pink-lady/4639332","bag":"Schytte","r":{"Helm":3.0,"Schytte":3.5,"Peter":2.75,"AC":2.75},"hater":"AC","g":null,"flag":null},{"y":2022,"d":"2022-12-24","adv":false,"n":3,"name":"Barrel Aged Sticky Little Fingers","brew":"Amundsen Brewery","price":80.0,"type":"Stout","type2":null,"abv":0.13,"land":null,"url":"https://untappd.com/b/amundsen-brewery-barrel-aged-sticky-little-fingers-2021/4491153","bag":"Helm","r":{"Helm":3.75,"Schytte":3.75,"Peter":4.75,"AC":4.25},"hater":"Helm","g":null,"flag":null},{"y":2023,"d":"2023-12-01","adv":false,"n":11,"name":"Jpeg Hotdog","brew":"SharktorBrewing.dk","price":50.0,"type":"IPL","type2":null,"abv":0.055,"land":null,"url":"https://untappd.com/b/sharktorbrewing-dk-jpeg-hotdog/5507526","bag":"Schytte","r":{"Helm":2.5,"Schytte":3.5,"Peter":3.0,"AC":2.75,"Miller":3.0},"hater":"Helm","g":null,"flag":null},{"y":2023,"d":"2023-12-02","adv":false,"n":5,"name":"The Saviour of the Broken, the Beaten, and the Damned","brew":"Low Key Barrel Project","price":70.0,"type":"Stout","type2":"Pastry","abv":0.11,"land":null,"url":"https://untappd.com/b/low-key-barrel-project-the-saviour-of-the-broken-the-beaten-and-the-damned/5450045","bag":"Helm","r":{"Helm":4.0,"Schytte":4.25,"Peter":4.0,"AC":3.25,"Miller":3.75},"hater":"AC","g":null,"flag":null},{"y":2023,"d":"2023-12-03","adv":false,"n":14,"name":"Jungle Juice","brew":"SharktorBrewing.dk","price":65.0,"type":"Sour","type2":"Pastry","abv":0.058,"land":null,"url":"https://untappd.com/b/sharktorbrewing-dk-jungle-juice/4848355","bag":"Schytte","r":{"Helm":3.75,"Schytte":3.25,"Peter":3.0,"AC":3.0,"Miller":3.75},"hater":"Peter","g":null,"flag":null},{"y":2023,"d":"2023-12-04","adv":false,"n":7,"name":"La Trappe Quadrupel","brew":"Bierbrouwerij De Koningshoeven","price":12.5,"type":"Belgian","type2":"Quadrupel","abv":0.1,"land":null,"url":"https://untappd.com/b/bierbrouwerij-de-koningshoeven-la-trappe-quadrupel/1830","bag":"Peter","r":{"Helm":3.5,"Schytte":3.75,"Peter":3.75,"AC":2.75,"Miller":3.5},"hater":"AC","g":null,"flag":null},{"y":2023,"d":"2023-12-05","adv":false,"n":8,"name":"Turn On The Lights","brew":"Track Brewing Company","price":80.0,"type":"IPA","type2":"Double","abv":0.085,"land":null,"url":"https://untappd.com/b/track-brewing-company-turn-on-the-lights/5477764","bag":"Peter","r":{"Helm":3.5,"Schytte":3.75,"Peter":4.0,"AC":3.25,"Miller":3.75},"hater":"AC","g":null,"flag":null},{"y":2023,"d":"2023-12-06","adv":false,"n":2,"name":"Monkey Tennis","brew":"FUERST WIACEK Berlin","price":40.0,"type":"IPA","type2":"New England","abv":0.068,"land":null,"url":"https://untappd.com/b/fuerst-wiacek-berlin-monkey-tennis/4887039","bag":"Helm","r":{"Helm":3.75,"Schytte":3.5,"Peter":3.5,"AC":3.25,"Miller":3.75},"hater":"AC","g":null,"flag":null},{"y":2023,"d":"2023-12-07","adv":false,"n":10,"name":"Moustache","brew":"Neon Raptor Brewing Co.","price":56.0,"type":"Stout","type2":"Pastry","abv":0.12,"land":null,"url":"https://untappd.com/b/neon-raptor-brewing-co-moustache/4932224","bag":"Peter","r":{"Helm":3.25,"Schytte":3.75,"Peter":3.75,"AC":3.25,"Miller":3.25},"hater":"Miller","g":null,"flag":null},{"y":2023,"d":"2023-12-08","adv":false,"n":25,"name":"Ārpus x Hidden Springs Pineapple x Vanilla x Coconut Smoothie Sour Ale","brew":"Ārpus Brewing Co.","price":55.0,"type":"Sour","type2":"Pastry","abv":0.05,"land":null,"url":"https://untappd.com/b/arpus-brewing-co-arpus-x-hidden-springs-pineapple-x-vanilla-x-coconut-smoothie-sour-ale/5474177","bag":"AC","r":{"Helm":3.5,"Schytte":4.5,"Peter":4.5,"AC":4.25,"Miller":4.25},"hater":"Helm","g":null,"flag":null},{"y":2023,"d":"2023-12-09","adv":false,"n":24,"name":"Willow","brew":"Outer Range Brewing Rockies/Alps","price":60.0,"type":"IPA","type2":"New England","abv":0.086,"land":null,"url":"https://untappd.com/b/outer-range-brewing-rockies-alps-willow/3174490","bag":"AC","r":{"Helm":3.25,"Schytte":3.0,"Peter":3.75,"AC":3.25,"Miller":3.5},"hater":"Schytte","g":null,"flag":null},{"y":2023,"d":"2023-12-10","adv":false,"n":23,"name":"Alexander","brew":"Brouwerij Rodenbach","price":24.0,"type":"Sour","type2":"Red Ale","abv":0.056,"land":null,"url":"https://untappd.com/b/brouwerij-rodenbach-alexander/2324","bag":"AC","r":{"Helm":3.75,"Schytte":3.5,"Peter":3.5,"AC":2.75,"Miller":3.25},"hater":"AC","g":null,"flag":null},{"y":2023,"d":"2023-12-11","adv":false,"n":12,"name":"Shaku","brew":"SharktorBrewing.dk","price":49.0,"type":"Lager","type2":"Koji","abv":0.055,"land":null,"url":"https://untappd.com/b/sharktorbrewing-dk-shaku/5354583","bag":"Schytte","r":{"Helm":2.5,"Schytte":3.0,"Peter":2.25,"AC":2.25,"Miller":2.25},"hater":"Peter","g":null,"flag":null},{"y":2023,"d":"2023-12-12","adv":false,"n":21,"name":"The Other One","brew":"Tilted Barn Brewery","price":77.0,"type":"IPA","type2":"Double","abv":0.079,"land":null,"url":"https://untappd.com/b/tilted-barn-brewery-the-other-one/1484322","bag":"AC","r":{"Helm":3.5,"Schytte":3.5,"Peter":3.25,"AC":3.0,"Miller":3.25},"hater":"AC","g":null,"flag":null},{"y":2023,"d":"2023-12-13","adv":false,"n":6,"name":"Barrel Aged Upside Down Christmas Cake 2021","brew":"Amundsen Brewery","price":47.0,"type":"Stout","type2":"Pastry","abv":0.115,"land":null,"url":"https://untappd.com/b/amundsen-brewery-barrel-aged-upside-down-christmas-cake-2021/4491146","bag":"Peter","r":{"Helm":3.5,"Schytte":2.5,"Peter":4.0,"AC":3.75,"Miller":3.25},"hater":"Schytte","g":null,"flag":null},{"y":2023,"d":"2023-12-14","adv":false,"n":20,"name":"Cranberry Double Currant Vanilla","brew":"Vault City","price":72.0,"type":"Sour","type2":null,"abv":0.085,"land":null,"url":"https://untappd.com/b/vault-city-brewing-cranberry-double-currant-vanilla/5209091","bag":"Miller","r":{"Helm":3.5,"Schytte":3.25,"Peter":3.5,"AC":3.0,"Miller":4.25},"hater":"Schytte","g":null,"flag":null},{"y":2023,"d":"2023-12-15","adv":false,"n":19,"name":"Heart of a Champion","brew":"Long Live Beerworks","price":65.0,"type":"IPA","type2":"Double","abv":0.085,"land":null,"url":"https://untappd.com/b/long-live-beerworks-heart-of-a-champion/3782819","bag":"Miller","r":{"Helm":3.75,"Schytte":4.0,"Peter":4.0,"AC":3.25,"Miller":3.75},"hater":"AC","g":null,"flag":null},{"y":2023,"d":"2023-12-16","adv":false,"n":22,"name":"KBS Espresso","brew":"Founders Brewing Co.","price":47.0,"type":"Stout","type2":null,"abv":0.12,"land":null,"url":"https://untappd.com/b/founders-brewing-co-kbs-espresso/3466890","bag":"AC","r":{"Helm":3.25,"Schytte":3.5,"Peter":4.0,"AC":3.5,"Miller":2.75},"hater":"Helm","g":null,"flag":null},{"y":2023,"d":"2023-12-17","adv":false,"n":17,"name":"Moons Opera","brew":"Ritual Lab","price":40.0,"type":"IPA","type2":"Double","abv":0.085,"land":null,"url":"https://untappd.com/b/ritual-lab-moons-opera/5522170","bag":"Miller","r":{"Helm":3.75,"Schytte":3.5,"Peter":3.25,"AC":3.0,"Miller":3.75},"hater":"Peter","g":null,"flag":null},{"y":2023,"d":"2023-12-18","adv":false,"n":1,"name":"TIC TAC TOE Lychees, Passion Fruit & Apricot","brew":"ODU Brewery","price":50.0,"type":"Sour","type2":"Pastry","abv":0.045,"land":null,"url":"https://untappd.com/b/odu-brewery-tic-tac-toe-lychees-passion-fruit-and-apricot/5361938","bag":"Helm","r":{"Helm":4.0,"Schytte":3.25,"Peter":4.0,"AC":4.0,"Miller":3.75},"hater":"Schytte","g":null,"flag":null},{"y":2023,"d":"2023-12-19","adv":false,"n":4,"name":"NOT FOR BREAKFAST CHERRY CHEESECAKE","brew":"Ten Men Brewery","price":50.0,"type":"Sour","type2":"Pastry","abv":0.05,"land":null,"url":"https://untappd.com/b/ten-men-brewery-not-for-breakfast-cherry-cheesecake/5320803","bag":"Helm","r":{"Helm":4.5,"Schytte":4.25,"Peter":4.0,"AC":4.0,"Miller":4.25},"hater":"Peter","g":null,"flag":null},{"y":2023,"d":"2023-12-20","adv":false,"n":15,"name":"French Toast Bänger","brew":"Põhjala","price":49.0,"type":"Stout","type2":null,"abv":0.12,"land":null,"url":"https://untappd.com/b/pohjala-french-toast-banger/5476961","bag":"Schytte","r":{"Helm":4.0,"Schytte":3.75,"Peter":4.0,"AC":4.0,"Miller":3.0},"hater":"AC","g":null,"flag":null},{"y":2023,"d":"2023-12-21","adv":false,"n":16,"name":"Thirst Bridge","brew":"Cohones Brewery","price":37.0,"type":"Sour","type2":"Pastry","abv":0.09,"land":null,"url":"https://untappd.com/b/cohones-brewery-thirst-bridge/5399975","bag":"Miller","r":{"Helm":2.75,"Schytte":3.0,"Peter":3.0,"AC":3.0,"Miller":3.25},"hater":"Helm","g":null,"flag":null},{"y":2023,"d":"2023-12-22","adv":false,"n":18,"name":"Coconuts","brew":"LERVIG","price":45.0,"type":"Stout","type2":"Pastry","abv":0.125,"land":null,"url":"https://untappd.com/b/lervig-coconuts/2553376","bag":"Miller","r":{"Helm":4.0,"Schytte":4.0,"Peter":4.0,"AC":4.25,"Miller":4.0},"hater":"Helm","g":null,"flag":null},{"y":2023,"d":"2023-12-23","adv":false,"n":13,"name":"Soda Pop Braggot - Cola","brew":"SharktorBrewing.dk","price":60.0,"type":"Mead","type2":null,"abv":0.05,"land":null,"url":"https://untappd.com/b/sharktorbrewing-dk-soda-pop-braggot-cola/4996676","bag":"Schytte","r":{"Helm":1.5,"Schytte":3.0,"Peter":2.0,"AC":2.25,"Miller":1.75},"hater":"Helm","g":null,"flag":null},{"y":2023,"d":"2023-12-24","adv":false,"n":3,"name":"Gelato: Banana Crepes Suzette","brew":"Funky Fluid","price":45.0,"type":"Sour","type2":"Smoothie","abv":0.055,"land":null,"url":"https://untappd.com/b/funky-fluid-gelato-banana-crepes-suzette/5451427","bag":"Helm","r":{"Helm":3.5,"Schytte":4.25,"Peter":3.5,"AC":3.75,"Miller":3.0},"hater":"Miller","g":null,"flag":null},{"y":2023,"d":"2023-12-25","adv":false,"n":9,"name":"Ārpus X Pühaste Blackcurrant X Cherry X Mango X Apricot Smoothie Sour Ale","brew":"Ārpus Brewing Co.","price":65.0,"type":"Sour","type2":"Smoothie","abv":0.05,"land":null,"url":"https://untappd.com/b/arpus-brewing-co-arpus-x-puhaste-blackcurrant-x-cherry-x-mango-x-apricot-smoothie-sour-ale/5474186","bag":"Peter","r":{"Helm":4.25,"Schytte":4.5,"Peter":4.5,"AC":4.25,"Miller":4.5},"hater":"Helm","g":null,"flag":null},{"y":2024,"d":"2024-12-01","adv":false,"n":15,"name":"Sårt Fl#de","brew":"Herodes","price":null,"type":"Stout","type2":"Imperial","abv":0.12,"land":null,"url":"https://untappd.com/b/herodes-sart-fl-de/5767979","bag":"Magic","r":{"Helm":2.75,"Peter":3.75,"AC":3.75,"Miller":3.25,"Magic":4.25},"hater":"Helm","g":null,"flag":null},{"y":2024,"d":"2024-12-02","adv":false,"n":9,"name":"Peach Silhoutte","brew":"Hudson Valley Brewery","price":null,"type":"IPA","type2":"Sour","abv":0.05,"land":null,"url":"https://untappd.com/b/hudson-valley-brewery-peach-silhouette/2323947","bag":"Peter","r":{"Helm":4.25,"Peter":3.5,"AC":3.5,"Miller":3.75,"Magic":3.5},"hater":"Magic","g":null,"flag":null},{"y":2024,"d":"2024-12-03","adv":false,"n":5,"name":"Blueprint (Enigma)","brew":"Folkingebrew","price":52.0,"type":"IPA","type2":"Hazy","abv":0.08,"land":null,"url":"https://untappd.com/b/folkingebrew-blueprint-enigma/5990047","bag":"Helm","r":{"Helm":4.25,"Peter":4.0,"AC":3.5,"Miller":4.0,"Magic":3.75},"hater":"AC","g":null,"flag":null},{"y":2024,"d":"2024-12-04","adv":false,"n":8,"name":"Dark Engineering (Cellar Series)","brew":"Põhjala","price":89.5,"type":"Stout","type2":"Double","abv":0.14,"land":null,"url":"https://untappd.com/b/pohjala-dark-engineering-cellar-series/5935412","bag":"Peter","r":{"Helm":3.25,"Peter":4.75,"AC":4.5,"Miller":3.75,"Magic":4.5},"hater":"Helm","g":null,"flag":null},{"y":2024,"d":"2024-12-05","adv":false,"n":19,"name":"Fluid Mechanics","brew":"Salikatt Bryggeri","price":58.0,"type":"IPA","type2":"Hazy","abv":0.08,"land":null,"url":"https://untappd.com/b/salikatt-fluid-mechanics/6006184","bag":"Miller","r":{"Helm":3.75,"Peter":3.25,"AC":3.25,"Miller":3.75,"Magic":3.75},"hater":"Peter","g":null,"flag":null},{"y":2024,"d":"2024-12-06","adv":false,"n":3,"name":"WILL IT FLOAT #9","brew":"White Dog Brewery","price":60.0,"type":"Sour","type2":"Smoothie","abv":0.06,"land":null,"url":"https://untappd.com/b/white-dog-brewery-will-it-float-9/6005431","bag":"Helm","r":{"Helm":4.0,"Peter":3.75,"AC":4.0,"Miller":3.25,"Magic":4.0},"hater":"Magic","g":null,"flag":null},{"y":2024,"d":"2024-12-07","adv":false,"n":23,"name":"Blueprint (Enigma)","brew":"Folkingebrew","price":52.0,"type":"IPA","type2":"Hazy","abv":0.08,"land":null,"url":"https://untappd.com/b/folkingebrew-blueprint-enigma/5990047","bag":"AC","r":{"Helm":4.25,"Peter":4.0,"AC":3.5,"Miller":4.0,"Magic":3.5},"hater":"Magic","g":null,"flag":null},{"y":2024,"d":"2024-12-08","adv":false,"n":17,"name":"Okinawa Obscura","brew":"Nemeton Brewing","price":48.5,"type":"Stout","type2":"Double","abv":0.125,"land":null,"url":"https://untappd.com/b/nemeton-brewing-okinawa-obscura/5949874","bag":"Miller","r":{"Helm":3.25,"Peter":3.75,"AC":4.0,"Miller":3.25,"Magic":3.5},"hater":"Miller","g":null,"flag":null},{"y":2024,"d":"2024-12-09","adv":false,"n":25,"name":"Pearfect Pearing","brew":"Hop Hooligans","price":62.5,"type":"Sour","type2":"Smoothie","abv":0.06,"land":null,"url":"https://untappd.com/b/hop-hooligans-pearfect-pearing/5918413","bag":"AC","r":{"Helm":3.25,"Peter":3.75,"AC":3.25,"Miller":3.75,"Magic":3.25},"hater":"Magic","g":null,"flag":null},{"y":2024,"d":"2024-12-10","adv":false,"n":11,"name":"Stikkelsbær Milkshake","brew":"Musicon Mikrobryggeri","price":null,"type":"Sour","type2":"Berliner Weisse","abv":0.055,"land":null,"url":"https://untappd.com/b/musicon-mikrobryggeri-stikkelsbaer-milkshake/5823166","bag":"Magic","r":{"Helm":3.25,"Peter":2.5,"AC":2.25,"Miller":2.75,"Magic":3.5},"hater":"AC","g":null,"flag":null},{"y":2024,"d":"2024-12-11","adv":false,"n":21,"name":"ROTT.brûlée","brew":"ROTT. Brouwers","price":36.5,"type":"Stout","type2":"Double","abv":0.105,"land":null,"url":"https://untappd.com/b/rott-brouwers-rott-brulee/6014798","bag":"AC","r":{"Helm":3.5,"Peter":3.75,"AC":3.5,"Miller":3.0,"Magic":3.5},"hater":"AC","g":null,"flag":null},{"y":2024,"d":"2024-12-12","adv":false,"n":22,"name":"NON-FOSSIL FUEL","brew":"Marlobobo's Megabear","price":null,"type":"Stout","type2":"Double","abv":0.14,"land":null,"url":"https://untappd.com/b/marlobobo-s-megabear-non-fossil-fuel/5216970","bag":"AC","r":{"Peter":4.5,"AC":4.25,"Miller":4.0,"Magic":4.25},"hater":"Helm","g":null,"flag":null},{"y":2024,"d":"2024-12-13","adv":false,"n":10,"name":"Lifebloom","brew":"Ophiussa","price":null,"type":"Sour","type2":"Smoothie","abv":0.05,"land":null,"url":"https://untappd.com/b/ophiussa-lifebloom/5868057","bag":"Peter","r":{"Helm":3.75,"Peter":4.0,"AC":4.0,"Miller":4.0,"Magic":3.75},"hater":"Magic","g":null,"flag":null},{"y":2024,"d":"2024-12-14","adv":false,"n":7,"name":"N'Ice Chouffe","brew":"Brasserie d'Achouffe","price":null,"type":"Winter Ale","type2":null,"abv":0.1,"land":null,"url":"https://untappd.com/b/brasserie-d-achouffe-n-ice-chouffe/7539","bag":"Peter","r":{"Helm":3.75,"Peter":3.75,"AC":3.5,"Miller":3.25,"Magic":3.25},"hater":"Magic","g":null,"flag":null},{"y":2024,"d":"2024-12-15","adv":false,"n":6,"name":"Bottle Shop Series: Nemesis (2021)","brew":"Founders Brewing Co.","price":null,"type":"Barley Wine","type2":null,"abv":0.112,"land":null,"url":"https://untappd.com/b/founders-brewing-co-nemesis-2021/4215826","bag":"Peter","r":{"Helm":1.75,"Peter":3.5,"AC":3.75,"Miller":3.0,"Magic":2.25},"hater":"Helm","g":null,"flag":null},{"y":2024,"d":"2024-12-16","adv":false,"n":13,"name":"Farmhouse Ale Au Cassis","brew":"Two Heads Behind","price":null,"type":"Farmhouse Ale","type2":null,"abv":0.08,"land":null,"url":"https://untappd.com/b/two-heads-behind-farmhouse-ale-au-cassis/3432388","bag":"Magic","r":{"Helm":2.75,"Peter":2.75,"AC":1.75,"Miller":3.0,"Magic":3.5},"hater":"AC","g":null,"flag":null},{"y":2024,"d":"2024-12-17","adv":false,"n":16,"name":"Freedom Don't Come Free","brew":"Spartacus Brewing","price":53.0,"type":"IPA","type2":"Hazy","abv":0.07,"land":null,"url":"https://untappd.com/b/spartacus-brewing-freedom-don-t-come-free/3886541","bag":"Miller","r":{"Helm":3.25,"Peter":3.5,"AC":3.75,"Miller":3.75,"Magic":3.25},"hater":"Helm","g":null,"flag":null},{"y":2024,"d":"2024-12-18","adv":false,"n":14,"name":"The Old Forge Belgisk Tripel Barrel Aged Calvados","brew":"Det Lille Bryggeri","price":null,"type":"Belgian Tripel","type2":null,"abv":0.107,"land":null,"url":"https://untappd.com/b/det-lille-bryggeri-the-old-forge-belgisk-tripel-barrel-aged-calvados/5316948","bag":"Magic","r":{"Helm":3.5,"Peter":3.75,"AC":3.75,"Miller":3.25,"Magic":3.25},"hater":"Miller","g":null,"flag":null},{"y":2024,"d":"2024-12-19","adv":false,"n":20,"name":"Bamm Bamm Rubble Rubble: NOW WITH RAINBOW SHERBET!","brew":"WeldWerks Brewing Co.","price":85.0,"type":"Sour","type2":"Fruited","abv":0.052,"land":null,"url":"https://untappd.com/b/weldwerks-brewing-co-bamm-bamm-rubble-rubble-now-with-rainbow-sherbet/5819975","bag":"Miller","r":{"Helm":4.5,"Peter":3.75,"AC":3.75,"Miller":4.25,"Magic":4.25},"hater":"Peter","g":null,"flag":null},{"y":2024,"d":"2024-12-20","adv":false,"n":12,"name":"Nightbreed","brew":"Slowburn Brewing Co-op","price":null,"type":"Stout","type2":"Double","abv":0.091,"land":null,"url":"https://untappd.com/b/slowburn-brewing-co-op-nightbreed/5677343","bag":"Magic","r":{"Helm":3.0,"Peter":3.5,"AC":4.0,"Miller":2.75,"Magic":4.0},"hater":"Miller","g":null,"flag":null},{"y":2024,"d":"2024-12-21","adv":false,"n":24,"name":"Pioneers & Explorers (PULP • w. Marlobobo)","brew":"Elmeleven","price":65.5,"type":"Sour","type2":"Smoothie","abv":0.05,"land":null,"url":"https://untappd.com/b/elmeleven-pioneers-and-explorers-pulp-w-marlobobo/5962906","bag":"AC","r":{"Helm":4.0,"Peter":4.0,"AC":4.25,"Miller":4.25,"Magic":3.5},"hater":"Magic","g":null,"flag":null},{"y":2024,"d":"2024-12-22","adv":false,"n":4,"name":"Caramel Fudge Stout Het Anker","brew":"Brouwerij Kees","price":37.0,"type":"Stout","type2":"Pastry","abv":0.115,"land":null,"url":"https://untappd.com/b/brouwerij-kees-caramel-fudge-stout-het-anker/5999162","bag":"Helm","r":{"Helm":3.5,"Peter":4.0,"AC":3.5,"Miller":3.0,"Magic":3.5},"hater":"Miller","g":null,"flag":null},{"y":2024,"d":"2024-12-23","adv":false,"n":2,"name":"Somewhere in Texas…","brew":"Sudden Death Brewing Co.","price":60.0,"type":"Sour","type2":null,"abv":0.055,"land":null,"url":"https://untappd.com/b/sudden-death-brewing-co-somewhere-in-texas/5980360","bag":"Helm","r":{"Helm":4.25,"Peter":4.0,"AC":3.75,"Miller":3.75,"Magic":4.0},"hater":"AC","g":null,"flag":null},{"y":2024,"d":"2024-12-24","adv":false,"n":1,"name":"Petit Jus De Mort: Pêche + Orange + Canneberge","brew":"Messorem","price":93.0,"type":"Sour","type2":null,"abv":0.06,"land":null,"url":"https://untappd.com/b/messorem-petit-jus-de-mort-peche-orange-canneberge/5858479","bag":"Helm","r":{"Helm":4.25,"Peter":3.5,"AC":3.0,"Miller":3.5,"Magic":3.0},"hater":"AC","g":null,"flag":null},{"y":2024,"d":"2024-12-25","adv":false,"n":18,"name":"Funeral Clown","brew":"Sudden Death Brewing Co.","price":61.0,"type":"Sour","type2":null,"abv":0.05,"land":null,"url":"https://untappd.com/b/sudden-death-brewing-co-funeral-clown-2024/5998889","bag":"Miller","r":{"Helm":4.0,"Peter":4.0,"AC":3.5,"Miller":3.5,"Magic":3.5},"hater":"AC","g":null,"flag":null},{"y":2025,"d":"2025-11-30","adv":true,"n":10,"name":"Ārpus Plum X Banana X Peach X Cherry X Coconut Smoothie Sour Ale","brew":"Ārpus Brewing Co.","price":57.44,"type":"Sour","type2":"Smoothie","abv":0.055,"land":"Panama","url":"https://untappd.com/b/arpus-brewing-co-arpus-plum-x-banana-x-peach-x-cherry-x-coconut-smoothie-sour-ale/6416857","bag":"Schytte","r":{"Helm":4.5,"Schytte":4.0,"Peter":4.0,"AC":3.75,"Miller":4.25,"Magic":3.75,"Oliver":3.5},"hater":"Oliver","g":{"Helm":0,"Schytte":0,"Peter":0,"AC":0,"Miller":1,"Magic":0,"Oliver":0},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Flag_of_Panama.svg/1200px-Flag_of_Panama.svg.png?20240316021703"},{"y":2025,"d":"2025-12-01","adv":false,"n":4,"name":"À La Guillotine XTRM TURBO","brew":"Messorem","price":82.0,"type":"IPA","type2":"New England","abv":0.07,"land":"Skt. Pierre & Miquelon","url":"https://untappd.com/b/messorem-a-la-guillotine-xtrm-turbo/6349476","bag":"Helm","r":{"Helm":4.75,"Schytte":4.0,"Peter":3.75,"AC":4.0,"Miller":3.75,"Magic":4.5,"Oliver":3.5},"hater":"Oliver","g":{"Helm":0,"Schytte":1,"Peter":1,"AC":1,"Miller":0,"Magic":0,"Oliver":0},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Flag_of_Saint-Pierre_and_Miquelon.svg/1200px-Flag_of_Saint-Pierre_and_Miquelon.svg.png"},{"y":2025,"d":"2025-12-02","adv":false,"n":6,"name":"Lychee, Pear & Rose Lemonade","brew":"Vault City","price":38.0,"type":"Sour","type2":"Fruited","abv":0.046,"land":"Turkmenistan","url":"https://untappd.com/b/vault-city-brewing-lychee-pear-and-rose-lemonade/6382276","bag":"Peter","r":{"Helm":4.0,"Schytte":3.75,"Peter":4.0,"AC":4.0,"Miller":3.5,"Magic":3.75,"Oliver":4.0},"hater":"Miller","g":{"Helm":1,"Schytte":0,"Peter":0,"AC":0,"Miller":0,"Magic":0,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Flag_of_Turkmenistan.svg/800px-Flag_of_Turkmenistan.svg.png"},{"y":2025,"d":"2025-12-03","adv":false,"n":11,"name":"Mongozo Coconut","brew":"Mongozo","price":24.0,"type":"Fruit Beer","type2":null,"abv":0.036,"land":"Angola","url":"https://untappd.com/b/mongozo-mongozo-coconut/30042","bag":"Schytte","r":{"Helm":3.25,"Schytte":3.0,"Peter":3.25,"AC":3.25,"Miller":3.25,"Magic":3.5,"Oliver":2.25},"hater":"Oliver","g":{"Helm":1,"Schytte":0,"Peter":1,"AC":1,"Miller":1,"Magic":0,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Flag_of_Angola.svg/1200px-Flag_of_Angola.svg.png"},{"y":2025,"d":"2025-12-04","adv":false,"n":23,"name":"Plum Catcher","brew":"Pipeworks Brewing Company","price":69.0,"type":"Sour","type2":"Fruited","abv":0.043,"land":"Mozambique","url":"https://untappd.com/b/pipeworks-brewing-company-plum-catcher/6186651","bag":"Magic","r":{"Helm":2.5,"Schytte":2.75,"Peter":3.25,"AC":2.0,"Miller":3.0,"Magic":3.25,"Oliver":3.5},"hater":"AC","g":{"Helm":1,"Schytte":1,"Peter":0,"AC":0,"Miller":0,"Magic":0,"Oliver":0},"flag":"https://upload.wikimedia.org/wikipedia/commons/d/d0/Flag_of_Mozambique.svg"},{"y":2025,"d":"2025-12-05","adv":false,"n":16,"name":"EXOTIC ESCAPE","brew":"Fermenterarna","price":60.0,"type":"Sour","type2":"Fruited","abv":0.056,"land":"Turks and Caicos","url":"https://untappd.com/b/fermenterarna-exotic-escape/6210075","bag":"Miller","r":{"Helm":3.75,"Schytte":3.5,"Peter":3.75,"AC":3.5,"Miller":3.5,"Magic":2.5,"Oliver":3.25},"hater":"Magic","g":{"Helm":1,"Schytte":1,"Peter":0,"AC":1,"Miller":0,"Magic":0,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Flag_of_the_Turks_and_Caicos_Islands.svg/1200px-Flag_of_the_Turks_and_Caicos_Islands.svg.png"},{"y":2025,"d":"2025-12-06","adv":false,"n":7,"name":"Blueprints: Television","brew":"Moersleutel","price":55.0,"type":"IPA","type2":"Double New England","abv":null,"land":"Tuvalu","url":"https://untappd.com/b/moersleutel-craft-brewery-blueprints-television/6328199","bag":"Peter","r":{"Helm":3.0,"Schytte":2.0,"Peter":3.75,"AC":3.5,"Miller":3.75,"Magic":3.0,"Oliver":2.25},"hater":"Schytte","g":{"Helm":1,"Schytte":0,"Peter":0,"AC":1,"Miller":1,"Magic":0,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Flag_of_Tuvalu.svg/1200px-Flag_of_Tuvalu.svg.png"},{"y":2025,"d":"2025-12-07","adv":false,"n":3,"name":"My Cucumber Mate","brew":"Horizont Brewing","price":35.0,"type":"Lager","type2":null,"abv":null,"land":"Argentina","url":"https://untappd.com/b/horizont-brewing-my-cucumber-mate/6340260","bag":"Helm","r":{"Helm":3.75,"Schytte":3.75,"Peter":2.0,"AC":2.0,"Miller":2.5,"Magic":3.5,"Oliver":3.0},"hater":"Peter","g":{"Helm":0,"Schytte":1,"Peter":1,"AC":1,"Miller":0,"Magic":0,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Flag_of_Argentina.svg/1200px-Flag_of_Argentina.svg.png"},{"y":2025,"d":"2025-12-07","adv":true,"n":13,"name":"Lupum Banana & Caramelo","brew":"Lupum","price":71.0,"type":"Stout","type2":"Double","abv":null,"land":"Guinea Bissau","url":"https://untappd.com/b/lupum-lupum-banana-and-caramelo/6100363","bag":"Miller","r":{"Helm":3.25,"Schytte":4.0,"Peter":4.25,"AC":4.25,"Miller":4.0,"Magic":4.25,"Oliver":4.25},"hater":"Helm","g":{"Helm":0,"Schytte":1,"Peter":1,"AC":0,"Miller":0,"Magic":0,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Flag_of_Guinea-Bissau.svg/1200px-Flag_of_Guinea-Bissau.svg.png"},{"y":2025,"d":"2025-12-08","adv":false,"n":19,"name":"Delirium Nocturnum","brew":"Delirium - Huyghe Brewery","price":44.0,"type":"Belgian Ale","type2":null,"abv":null,"land":"Bahrain","url":"https://untappd.com/b/delirium-huyghe-brewery-delirium-nocturnum/4486","bag":"Oliver","r":{"Helm":3.5,"Schytte":3.75,"Peter":3.5,"AC":3.75,"Miller":3.25,"Magic":2.5},"hater":"Magic","g":{"Helm":1,"Schytte":0,"Peter":0,"AC":0,"Miller":0,"Magic":0,"Oliver":0},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Flag_of_Bahrain.svg/1200px-Flag_of_Bahrain.svg.png"},{"y":2025,"d":"2025-12-09","adv":false,"n":9,"name":"Geweldig Honing","brew":"Geweldig Bier","price":27.0,"type":"Honey","type2":null,"abv":null,"land":"Zimbabwe","url":"https://untappd.com/b/geweldig-bier-geweldig-honing/5998773","bag":"Schytte","r":{"Helm":3.25,"Schytte":3.0,"Peter":3.0,"AC":3.5,"Miller":2.75,"Magic":3.0,"Oliver":3.5},"hater":"Miller","g":{"Helm":1,"Schytte":0,"Peter":0,"AC":1,"Miller":1,"Magic":0,"Oliver":0},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Flag_of_Zimbabwe.svg/1200px-Flag_of_Zimbabwe.svg.png"},{"y":2025,"d":"2025-12-10","adv":false,"n":24,"name":"Tastes Like Flowers","brew":"Creature Comforts Brewing Co.","price":69.0,"type":"Saison","type2":null,"abv":null,"land":"Malaysia","url":"https://untappd.com/b/creature-comforts-brewing-co-tastes-like-flowers/3750292","bag":"Magic","r":{"Helm":3.75,"Schytte":3.5,"Peter":3.5,"AC":2.75,"Miller":3.25,"Magic":3.75},"hater":"AC","g":{"Helm":0,"Schytte":1,"Peter":0,"AC":0,"Miller":0,"Magic":0,"Oliver":0},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Flag_of_Malaysia_%283-2%29.svg/2100px-Flag_of_Malaysia_%283-2%29.svg.png"},{"y":2025,"d":"2025-12-11","adv":false,"n":25,"name":"Saffron Blond","brew":"Cyrus Beer","price":19.0,"type":"Blonde","type2":null,"abv":null,"land":"Iran","url":"https://untappd.com/b/cyrus-beers-saffron-blond/2667758","bag":"AC","r":{"Helm":2.75,"Schytte":2.75,"Peter":3.0,"AC":2.5,"Miller":2.75,"Magic":2.75,"Oliver":3.25},"hater":"AC","g":{"Helm":1,"Schytte":1,"Peter":1,"AC":0,"Miller":1,"Magic":1,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Flag_of_Iran.svg/630px-Flag_of_Iran.svg.png"},{"y":2025,"d":"2025-12-12","adv":false,"n":8,"name":"Clash of the Titans Grand Reserva (2018)","brew":"De Struise Brouwers","price":41.0,"type":"Barley Wine","type2":null,"abv":null,"land":"Schweiz","url":"https://untappd.com/b/de-struise-brouwers-clash-of-the-titans-grand-reserva-2018/4741983","bag":"Peter","r":{"Helm":0.75,"Schytte":3.75,"Peter":3.75,"AC":3.75,"Miller":3.25,"Magic":2.0,"Oliver":3.75},"hater":"Helm","g":{"Helm":1,"Schytte":1,"Peter":0,"AC":1,"Miller":1,"Magic":0,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Flag_of_Switzerland.svg/1024px-Flag_of_Switzerland.svg.png"},{"y":2025,"d":"2025-12-13","adv":false,"n":12,"name":"Ārpus X Celestial Beerworks QDH Peacharine X Citra X Rakau X Strata TIPA","brew":"Ārpus Brewing","price":57.44,"type":"IPA","type2":"Triple","abv":0.1,"land":"Letland","url":"https://untappd.com/b/arpus-brewing-co-arpus-x-celestial-beerworks-qdh-peacharine-x-citra-x-rakau-x-strata-tipa/6423976","bag":"Schytte","r":{"Helm":3.5,"Schytte":3.5,"Peter":3.5,"AC":3.25,"Miller":3.5,"Magic":3.5,"Oliver":3.5},"hater":"AC","g":{"Helm":1,"Schytte":0,"Peter":1,"AC":1,"Miller":1,"Magic":1,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Flag_of_Latvia.svg/1200px-Flag_of_Latvia.svg.png"},{"y":2025,"d":"2025-12-14","adv":false,"n":18,"name":"Funky Falcon","brew":"Two Chefs Brewing","price":22.0,"type":"Pale Ale","type2":"American","abv":0.052,"land":"Falklandsøerne","url":"https://untappd.com/b/two-chefs-brewing-funky-falcon/718678","bag":"Miller","r":{"Helm":3.5,"Schytte":3.25,"Peter":2.75,"AC":3.25,"Miller":3.5,"Magic":3.5,"Oliver":3.0},"hater":"Peter","g":{"Helm":1,"Schytte":1,"Peter":1,"AC":1,"Miller":0,"Magic":1,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/8/83/Flag_of_the_Falkland_Islands.svg"},{"y":2025,"d":"2025-12-14","adv":true,"n":15,"name":"Paradise Island - White Guava, Apricot, Mango","brew":"Vault City Brewing","price":83.0,"type":"Sour","type2":"Smoothie","abv":0.072,"land":"Burkina Faso","url":"https://untappd.com/b/vault-city-brewing-paradise-island-white-guava-apricot-mango/6382296","bag":"Oliver","r":{"Helm":3.5,"Schytte":3.5,"Peter":4.0,"AC":4.0,"Miller":3.75,"Magic":3.0,"Oliver":4.0},"hater":"Schytte","g":{"Helm":0,"Schytte":0,"Peter":0,"AC":0,"Miller":0,"Magic":0,"Oliver":0},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Flag_of_Burkina_Faso.svg/1200px-Flag_of_Burkina_Faso.svg.png"},{"y":2025,"d":"2025-12-15","adv":false,"n":22,"name":"Beer for Power Plays","brew":"Off Color Brewing","price":38.0,"type":"Porter","type2":null,"abv":0.075,"land":"Liechtenstein","url":"https://untappd.com/b/off-color-brewing-beer-for-power-plays/5982711","bag":"Magic","r":{"Helm":3.25,"Schytte":4.25,"Peter":3.75,"AC":3.5,"Miller":3.5,"Magic":3.75},"hater":"Helm","g":{"Helm":0,"Schytte":1,"Peter":1,"AC":1,"Miller":1,"Magic":0,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Flag_of_Liechtenstein.svg/250px-Flag_of_Liechtenstein.svg.png"},{"y":2025,"d":"2025-12-16","adv":false,"n":21,"name":"Flash Cat","brew":"Creature Comforts Brewing Co.","price":69.0,"type":"IPA","type2":"Double New England","abv":0.08,"land":"Bahamas","url":"https://untappd.com/b/creature-comforts-brewing-co-flash-cat/5123208","bag":"Magic","r":{"Helm":3.75,"Schytte":3.75,"Peter":3.75,"AC":3.5,"Miller":3.5,"Magic":3.75,"Oliver":3.75},"hater":"Miller","g":{"Helm":1,"Schytte":1,"Peter":1,"AC":1,"Miller":1,"Magic":0,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Flag_of_the_Bahamas.svg/1280px-Flag_of_the_Bahamas.svg.png"},{"y":2025,"d":"2025-12-17","adv":false,"n":2,"name":"Birthday Bonanza","brew":"CoolHead Brew","price":50.0,"type":"Stout","type2":"Double Pastry","abv":0.12,"land":"Yemen","url":"https://untappd.com/b/coolhead-brew-birthday-bonanza/6273947","bag":"Helm","r":{"Helm":3.5,"Schytte":3.5,"Peter":3.25,"AC":3.25,"Miller":3.5,"Magic":3.75,"Oliver":3.5},"hater":"Peter","g":{"Helm":0,"Schytte":1,"Peter":1,"AC":1,"Miller":1,"Magic":1,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Flag_of_Yemen.svg/960px-Flag_of_Yemen.svg.png"},{"y":2025,"d":"2025-12-18","adv":false,"n":5,"name":"Double Falcon","brew":"Triple Crossing","price":73.0,"type":"IPA","type2":"Imperial","abv":0.08,"land":"De Forenede Arabiske Emirater","url":"https://untappd.com/b/triple-crossing-double-falcon/5312425","bag":"Peter","r":{"Helm":3.25,"Schytte":3.75,"Peter":4.0,"AC":3.75,"Miller":3.75,"Magic":3.5},"hater":"Helm","g":{"Helm":1,"Schytte":1,"Peter":0,"AC":1,"Miller":1,"Magic":1,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/c/cb/Flag_of_the_United_Arab_Emirates.svg"},{"y":2025,"d":"2025-12-19","adv":false,"n":20,"name":"Hefeweizen","brew":"Browar Stu Mostów","price":40.0,"type":"Wheat Beer","type2":null,"abv":0.05,"land":"Nauru","url":"https://untappd.com/b/browar-stu-mostow-hefeweizen/6349841","bag":"Oliver","r":{"Helm":3.75,"Schytte":3.25,"Peter":3.25,"AC":3.25,"Miller":3.25,"Magic":3.5,"Oliver":3.25},"hater":"Peter","g":{"Helm":1,"Schytte":0,"Peter":1,"AC":1,"Miller":1,"Magic":1,"Oliver":0},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Flag_of_Nauru.svg/1200px-Flag_of_Nauru.svg.png"},{"y":2025,"d":"2025-12-20","adv":false,"n":28,"name":"DOUBLE MANA - Piña Colada","brew":"Azvex Brewing Company","price":83.0,"type":"Sour","type2":"Smoothie","abv":0.082,"land":"Cocosøerne","url":"https://untappd.com/b/azvex-brewing-company-double-mana-pina-colada/6375216","bag":"AC","r":{"Helm":3.75,"Schytte":4.5,"Peter":4.25,"AC":4.5,"Miller":3.5,"Magic":2.75,"Oliver":0.5},"hater":"Oliver","g":{"Helm":1,"Schytte":1,"Peter":1,"AC":0,"Miller":1,"Magic":1,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/en/thumb/7/74/Flag_of_the_Cocos_%28Keeling%29_Islands.svg/1200px-Flag_of_the_Cocos_%28Keeling%29_Islands.svg.png"},{"y":2025,"d":"2025-12-21","adv":false,"n":26,"name":"Old School #3 - Bourbon B.A.","brew":"Brewery De Meester","price":49.0,"type":"Barley Wine","type2":null,"abv":0.12,"land":"Georgien","url":"https://untappd.com/b/brewery-de-meester-old-school-3-bourbon-b-a/6365041","bag":"AC","r":{"Helm":3.0,"Schytte":3.75,"Peter":3.75,"AC":4.5,"Miller":3.0,"Magic":1.0,"Oliver":3.5},"hater":"Magic","g":{"Helm":1,"Schytte":1,"Peter":1,"AC":0,"Miller":1,"Magic":0,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Flag_of_Georgia.svg/1200px-Flag_of_Georgia.svg.png"},{"y":2025,"d":"2025-12-21","adv":true,"n":1,"name":"Shark O","brew":"Mead Scientist","price":40.0,"type":"Mead","type2":null,"abv":0.078,"land":"Senegal","url":"https://untappd.com/b/mead-scientist-shark-o/6237243","bag":"Helm","r":{"Helm":3.75,"Schytte":4.25,"Peter":3.5,"AC":2.0,"Miller":3.5,"Magic":3.75,"Oliver":2.25},"hater":"AC","g":{"Helm":0,"Schytte":1,"Peter":1,"AC":1,"Miller":1,"Magic":1,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_Senegal.svg"},{"y":2025,"d":"2025-12-22","adv":false,"n":14,"name":"New French IPA","brew":"Brasserie Cambier","price":44.0,"type":"IPA","type2":"New England","abv":0.065,"land":"Fransk Guyana","url":"https://untappd.com/b/brasserie-cambier-new-french-ipa/3938334","bag":"Miller","r":{"Helm":3.75,"Schytte":3.5,"Peter":3.5,"AC":3.5,"Miller":3.5,"Magic":3.25},"hater":"Magic","g":{"Helm":1,"Schytte":1,"Peter":1,"AC":1,"Miller":0,"Magic":1,"Oliver":1},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Flag_of_French_Guiana.svg/2560px-Flag_of_French_Guiana.svg.png"},{"y":2025,"d":"2025-12-23","adv":false,"n":17,"name":"Bar Li'Vin Caribian Rum","brew":"Humleland","price":35.0,"type":"Barley Wine","type2":null,"abv":0.14,"land":"Barbados","url":"https://untappd.com/b/humleland-bar-li-vin-caribian-rum/4289090","bag":"Oliver","r":{"Helm":0.5,"Schytte":1.0,"Peter":2.0,"AC":1.5,"Miller":1.0,"Magic":3.0,"Oliver":2.75},"hater":"Helm","g":{"Helm":1,"Schytte":1,"Peter":1,"AC":1,"Miller":1,"Magic":1,"Oliver":0},"flag":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Flag_of_Barbados.svg/1200px-Flag_of_Barbados.svg.png"},{"y":2025,"d":"2025-12-24","adv":false,"n":27,"name":"CAD BANE","brew":"Bang The Elephant Brewing Co","price":62.0,"type":"Stout","type2":"Imperial","abv":0.13,"land":"Elfenbenskysten","url":"https://untappd.com/b/bang-the-elephant-brewing-co-cad-bane/6135495","bag":"AC","r":{"Helm":3.0,"Schytte":4.5,"Peter":4.5,"AC":4.5,"Magic":4.25},"hater":"Helm","g":{"Helm":1,"Schytte":1,"Peter":1,"AC":0,"Miller":1,"Magic":1,"Oliver":1},"flag":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTlJ6CbEUW7M6FZUZrH5Zgzws1V5jl8jvznFg&s"}],"live":2026,"firebase":null};
+(() => {
+const PEOPLE = DATA.people;
+const LIVE = DATA.live; // the year friends register on the page itself; earlier years are baked in from the spreadsheet
+const MONTHS = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+
+/* ---------- data: baked years + live rows from the artifact db ---------- */
+let BEERS = [], YEARS = [];
+let liveDocs = new Map(); // db "beers" doc id -> raw doc
+let liveOn = false, writable = false, beersCol = null;
+
+function decorate(b, id) {
+  const vals = Object.values(b.r);
+  const avg = vals.length ? vals.reduce((a, c) => a + c, 0) / vals.length : null;
+  const units = b.abv != null ? 330 * b.abv * 0.789 / 12 : null;
+  return { ...b, id, haters: b.haters || (b.hater ? [b.hater] : []), avg, units, spread: vals.length > 1 ? Math.max(...vals) - Math.min(...vals) : 0 };
+}
+// Dagens Hater for live rows: whoever gave the lowest rating; a tie shares the title.
+function hatersOf(r) {
+  const ps = PEOPLE.filter(p => r[p] != null);
+  if (ps.length < 2) return [];
+  const lo = Math.min(...ps.map(p => r[p]));
+  return ps.filter(p => r[p] === lo);
+}
+// db rows are written by every viewer, so take only well-formed fields
+function fromDoc(x) {
+  if (!x || typeof x.d !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(x.d) || +x.d.slice(0, 4) !== LIVE) return null;
+  const str = (v, n = 200) => typeof v === "string" && v.trim() ? v.replace(/\s+/g, " ").trim().slice(0, n) : null;
+  const nn = (v, lo, hi) => typeof v === "number" && isFinite(v) && v >= lo && v <= hi ? v : null;
+  const r = {};
+  for (const p of PEOPLE) { const v = nn(x.r && x.r[p], 0, 5); if (v != null) r[p] = v; }
+  const url = str(x.url, 500);
+  const haters = hatersOf(r);
+  return {
+    y: LIVE, d: x.d, adv: x.adv === true, n: nn(x.n, 0, 999) || 0,
+    name: str(x.name) || "Unavngiven øl", brew: str(x.brew), price: nn(x.price, 0, 100000),
+    type: str(x.type, 60), type2: str(x.type2, 60), abv: nn(x.abv, 0, 1), land: null,
+    url: url && /^https:\/\//i.test(url) ? url : null, bag: PEOPLE.includes(x.bag) ? x.bag : null,
+    r, haters, hater: haters[0] || null, g: null, flag: null, live: true,
+  };
+}
+const dayKey = (d, adv) => d + (adv ? "-advent" : "");
+function rebuild() {
+  const baked = DATA.beers.map((b, i) => decorate(b, "b" + i));
+  const bakedKeys = new Set(baked.map(b => dayKey(b.d, b.adv)));
+  const live = [];
+  for (const [k, x] of liveDocs) {
+    const b = fromDoc(x);
+    if (b && !bakedKeys.has(dayKey(b.d, b.adv))) live.push(decorate(b, "l-" + k)); // once a year is in the spreadsheet, the sheet wins
+  }
+  BEERS = baked.concat(live).sort((a, b) => a.d.localeCompare(b.d) || a.n - b.n);
+  YEARS = [...new Set(BEERS.map(b => b.y))].sort();
+  // advent sunday numbering: from the date when it is one of the four Sundays (4th advent is the last Sunday on or before the 24th), else by count
+  const advCount = {};
+  for (const b of BEERS) if (b.adv) {
+    advCount[b.y] = (advCount[b.y] || 0) + 1;
+    const day = new Date(b.d + "T12:00:00"), eve = new Date(b.y + "-12-24T12:00:00");
+    const no = 4 - Math.round((eve - eve.getDay() * 864e5 - day) / (7 * 864e5));
+    b.advNo = day.getDay() === 0 && no >= 1 && no <= 4 ? no : advCount[b.y];
+  }
+}
+rebuild();
+
+const pc = p => `var(--p-${p}, var(--muted))`;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (v, d = 2) => v == null || isNaN(v) ? "–" : v.toLocaleString("da-DK", { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmt0 = v => fmt(v, 0);
+const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+const dateLbl = b => { const [y, m, d] = b.d.split("-"); return `${+d}. ${MONTHS[+m - 1]} ${y}`; };
+const dayLbl = b => +b.d.slice(8);
+const sub = b => [b.brew, b.type].filter(Boolean).join(" · ");
+
+/* ---------- state ---------- */
+const state = { years: new Set(YEARS), bag: "", type: "", search: "", sortKey: "d", sortDir: 1, open: new Set(), hiAbv: null, hiPrice: null };
+try {
+  const saved = JSON.parse(localStorage.getItem("alkolender") || "null");
+  if (saved && Array.isArray(saved.years)) {
+    const ys = saved.years.filter(y => YEARS.includes(y));
+    if (ys.length) state.years = new Set(ys);
+    state.bag = saved.bag || ""; state.type = saved.type || "";
+  }
+} catch (e) {}
+const save = () => { try { localStorage.setItem("alkolender", JSON.stringify({ years: [...state.years], bag: state.bag, type: state.type })); } catch (e) {} };
+
+const matchNonYear = b => (!state.bag || b.bag === state.bag) && (!state.type || b.type === state.type);
+const filtered = () => BEERS.filter(b => state.years.has(b.y) && matchNonYear(b));
+const peopleIn = list => PEOPLE.filter(p => list.some(b => b.r[p] != null));
+
+/* ---------- tooltip ---------- */
+const tip = document.getElementById("tip");
+function showTip(e, html) {
+  tip.innerHTML = html; tip.classList.add("on");
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = e.clientX + pad, y = e.clientY + pad;
+  if (x + w > innerWidth - 8) x = e.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = e.clientY - h - pad;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+}
+const hideTip = () => tip.classList.remove("on");
+function bindTips(root) {
+  root.querySelectorAll("[data-tip]").forEach(el => {
+    el.addEventListener("mousemove", e => showTip(e, el.dataset.tip));
+    el.addEventListener("mouseleave", hideTip);
+  });
+  root.querySelectorAll("[data-beer]").forEach(el => el.addEventListener("click", () => openBeer(el.dataset.beer)));
+}
+const beerTip = b => esc(`<b>${esc(b.name)}</b>${esc(b.brew || "")}<div class="m">${dateLbl(b)} · snit ${fmt(b.avg)}${b.abv != null ? " · " + fmt(b.abv * 100, 1) + "%" : ""}${b.price != null ? " · " + fmt0(b.price) + " kr" : ""}</div>`);
+
+/* ---------- filters ui ---------- */
+const yearChips = document.getElementById("yearChips");
+function renderChips() {
+  const all = state.years.size === YEARS.length;
+  yearChips.innerHTML = `<button class="chip" type="button" data-y="all" aria-pressed="${all}">Alle år</button>` +
+    YEARS.map(y => `<button class="chip" type="button" data-y="${y}" aria-pressed="${!all && state.years.has(y)}">${y}</button>`).join("");
+}
+yearChips.addEventListener("click", e => {
+  const btn = e.target.closest("[data-y]"); if (!btn) return;
+  const y = btn.dataset.y;
+  if (y === "all") state.years = new Set(YEARS);
+  else {
+    const yy = +y, all = state.years.size === YEARS.length;
+    if (all) state.years = new Set([yy]);
+    else if (state.years.has(yy)) { state.years.delete(yy); if (!state.years.size) state.years = new Set(YEARS); }
+    else state.years.add(yy);
+  }
+  update();
+});
+const bagSel = document.getElementById("bagSel"), typeSel = document.getElementById("typeSel");
+const uniq = f => [...new Set(BEERS.map(f).filter(Boolean))].sort((a, b) => a.localeCompare(b, "da"));
+// filter selects and the entry form's suggestions follow the data, which grows as live rows arrive
+function fillLists() {
+  const bags = PEOPLE.filter(p => BEERS.some(b => b.bag === p));
+  bagSel.innerHTML = `<option value="">Alle</option>` + bags.map(p => `<option>${esc(p)}</option>`).join("");
+  typeSel.innerHTML = `<option value="">Alle</option>` + uniq(b => b.type).map(t => `<option>${esc(t)}</option>`).join("");
+  bagSel.value = state.bag; typeSel.value = state.type;
+  const opts = l => l.map(v => `<option value="${esc(v)}">`).join("");
+  document.getElementById("dlBrew").innerHTML = opts(uniq(b => b.brew));
+  document.getElementById("dlType").innerHTML = opts(uniq(b => b.type));
+  document.getElementById("dlType2").innerHTML = opts(uniq(b => b.type2));
+}
+fillLists();
+bagSel.addEventListener("change", () => { state.bag = bagSel.value; update(); });
+typeSel.addEventListener("change", () => { state.type = typeSel.value; update(); });
+document.getElementById("resetBtn").addEventListener("click", () => { state.years = new Set(YEARS); state.bag = ""; state.type = ""; state.search = ""; document.getElementById("search").value = ""; update(); });
+const setType = t => { state.type = state.type === t ? "" : t; update(); };
+
+/* ---------- hero ---------- */
+function renderHero(F) {
+  const ys = YEARS.filter(y => state.years.has(y));
+  document.getElementById("yearSpan").textContent = ys.length > 1 ? `${ys[0]}–${ys[ys.length - 1]}` : ys[0];
+  const ppl = peopleIn(F);
+  document.getElementById("tagline").innerHTML = `<em>${ys.length}</em> ${ys.length === 1 ? "december" : "decembre"}. <em>${F.length}</em> øl. <em>${ppl.length}</em> ganer. Én øl om dagen, ingen undskyldninger.`;
+  const avgs = F.map(b => b.avg).filter(v => v != null);
+  const m = mean(avgs);
+  document.getElementById("glassLabel").textContent = fmt(m);
+  document.getElementById("beerFill").style.height = (m ? (m / 5) * 92 : 0) + "%";
+  const units = F.reduce((a, b) => a + (b.units || 0), 0);
+  const kr = F.reduce((a, b) => a + (b.price || 0), 0);
+  const ratings = F.reduce((a, b) => a + Object.keys(b.r).length, 0);
+  document.getElementById("stats").innerHTML = [
+    [F.length, "øl i kalenderen"],
+    [fmt(F.length * 0.33, 1), "liter pr. mand", "regnet som 33 cl"],
+    [fmt(units, 0), "genstande pr. mand", "12 g ren alkohol hver"],
+    [fmt0(kr), "kroner brugt", "på øl med kendt pris"],
+    [ratings, "ratings afgivet"],
+  ].map(([v, k, s]) => `<div class="stat"><div class="v num">${v}</div><div class="k">${k}${s ? `<small>${s}</small>` : ""}</div></div>`).join("");
+}
+function tick() {
+  const now = new Date();
+  const y = now.getMonth() === 11 && now.getDate() > 24 ? now.getFullYear() + 1 : now.getFullYear();
+  const start = new Date(y, 11, 1), el = document.getElementById("countdown");
+  if (now >= start && now.getMonth() === 11 && now.getDate() <= 24) {
+    el.innerHTML = `<b>Låge ${now.getDate()}</b><span>er åben i dag. Hvem er bagmand?</span>`;
+    return;
+  }
+  let s = Math.max(0, Math.floor((start - now) / 1000));
+  const d = Math.floor(s / 86400); s %= 86400;
+  const h = Math.floor(s / 3600); s %= 3600;
+  const mi = Math.floor(s / 60); s %= 60;
+  const p = n => String(n).padStart(2, "0");
+  el.innerHTML = `<b>${d} dage</b><span class="num">${p(h)}:${p(mi)}:${p(s)}</span><span>til første låge i ${y}</span>`;
+}
+
+/* ---------- calendar ---------- */
+const LIDS = ["#c62a2d", "#1f7a5a", "#b02327", "#17654a", "#d23a3c", "#245a9e"];
+// The live year gets a full wall of 24 doors from the start; unregistered days are placeholders you click to register.
+function calYears() {
+  const ys = YEARS.filter(y => state.years.has(y));
+  if (liveOn && !ys.includes(LIVE) && (state.years.size === YEARS.length || state.years.has(LIVE))) ys.push(LIVE);
+  return ys.sort().reverse();
+}
+function calList(y) {
+  const list = BEERS.filter(b => b.y === y);
+  if (y !== LIVE || !liveOn) return list;
+  const have = new Set(list.filter(b => !b.adv).map(b => b.d));
+  for (let d = 1; d <= 24; d++) {
+    const ds = `${y}-12-${String(d).padStart(2, "0")}`;
+    if (!have.has(ds)) list.push({ ph: true, y, d: ds, adv: false, n: 0 });
+  }
+  return list.sort((a, b) => a.d.localeCompare(b.d) || a.adv - b.adv || a.n - b.n);
+}
+function renderCalendars() {
+  document.getElementById("calendars").innerHTML = calYears().map(y => {
+    const list = calList(y), real = list.filter(b => !b.ph);
+    const shown = real.filter(matchNonYear);
+    const avg = mean(shown.map(b => b.avg).filter(v => v != null));
+    const best = [...shown].filter(b => b.avg != null).sort((a, b) => b.avg - a.avg)[0];
+    const live = y === LIVE && liveOn;
+    return `<div class="cal-year"><h3>${y}${live ? ` <span class="livetag">LIVE</span>` : ""} <small>${real.length} ${live ? "af 24 " : ""}låger · snit ${fmt(avg)}${best ? ` · bedst: ${esc(best.name)}` : ""}</small></h3>
+      <div class="doors">${list.map((b, i) => {
+        const big = !b.adv && dayLbl(b) === 24;
+        const lid = b.adv ? "#0d1838" : LIDS[(i * 7 + y) % LIDS.length];
+        if (b.ph) return `<button class="door todo${big ? " big" : ""}" type="button" data-todo="${b.d}" style="--lid:${lid}" ${writable ? "" : "disabled"} aria-label="${esc(dateLbl(b))}: ${writable ? "registrér dagens øl" : "ikke registreret endnu"}">
+          <span class="lid"><span class="d">${dayLbl(b)}</span>${writable ? `<span class="adv">＋ registrér</span>` : ""}</span>
+        </button>`;
+        const open = state.open.has(b.id);
+        return `<button class="door${big ? " big" : ""}${open ? " open" : ""}${matchNonYear(b) ? "" : " dim"}" type="button" data-door="${b.id}" style="--lid:${lid}" aria-label="${esc(dateLbl(b))}: ${esc(b.name)}">
+          <span class="inside"><span class="score">${fmt(b.avg)}</span><span class="nm">${esc(b.name)}</span><span class="who">${esc(b.bag || "")}</span></span>
+          <span class="lid">${b.adv ? `<span class="adv">${b.advNo}. advent</span><span class="d">★</span>` : `<span class="d">${dayLbl(b)}</span>`}</span>
+        </button>`;
+      }).join("")}</div></div>`;
+  }).join("");
+}
+document.getElementById("calendars").addEventListener("click", e => {
+  const t = e.target.closest("[data-todo]");
+  if (t) { if (writable) openEntry({ d: t.dataset.todo }); return; }
+  const d = e.target.closest("[data-door]"); if (!d) return;
+  const id = d.dataset.door;
+  if (!state.open.has(id)) {
+    state.open.add(id); d.classList.add("open");
+    setTimeout(() => openBeer(id), 520);
+  } else openBeer(id);
+});
+document.getElementById("openAll").addEventListener("click", () => {
+  const doors = [...document.querySelectorAll(".door[data-door]")];
+  doors.forEach((d, i) => setTimeout(() => { state.open.add(d.dataset.door); d.classList.add("open"); }, i * 18));
+});
+document.getElementById("closeAll").addEventListener("click", () => {
+  state.open.clear(); document.querySelectorAll(".door.open").forEach(d => d.classList.remove("open"));
+});
+
+/* ---------- rank list ---------- */
+function rankList(id, rows, valFn, subFn) {
+  const el = document.getElementById(id);
+  if (!rows.length) { el.innerHTML = `<li class="empty">Ingen øl i det valgte filter.</li>`; return; }
+  el.innerHTML = rows.map((r, i) => {
+    const b = r.beer || r;
+    return `<li><button type="button" data-beer="${b.id}"><span class="pos">${i + 1}</span><span class="t"><b>${esc(b.name)}</b><span>${subFn ? subFn(r) : esc(sub(b)) + " · " + esc(b.bag || "")}</span></span><span class="s">${valFn(r)}</span></button></li>`;
+  }).join("");
+  bindTips(el);
+}
+
+/* ---------- html bars ---------- */
+function bars(id, items, { max, min = 0, fmtV = v => fmt(v), diverge = false } = {}) {
+  const el = document.getElementById(id);
+  if (!items.length) { el.innerHTML = `<div class="empty">Ingen data i det valgte filter.</div>`; return; }
+  const hi = max ?? Math.max(...items.map(d => d.value));
+  const lo = diverge ? -Math.max(...items.map(d => Math.abs(d.value))) : min;
+  const top = diverge ? -lo : hi;
+  const pos = v => ((v - lo) / (top - lo || 1)) * 100;
+  el.innerHTML = items.map(d => {
+    const z = pos(diverge ? 0 : lo), p = pos(d.value);
+    const left = Math.min(z, p), w = Math.max(Math.abs(p - z), .6);
+    const tag = d.onClick ? "button" : "div";
+    return `<${tag} class="bar" ${d.onClick ? `type="button" data-act="${esc(d.act)}"` : ""} ${d.tip ? `data-tip="${esc(d.tip)}"` : ""}>
+      <span class="lbl">${d.dot ? `<span class="pdot" style="background:${d.dot}"></span>` : ""}${esc(d.label)}</span>
+      <span class="track">${diverge ? `<span class="zero" style="left:${z}%"></span>` : ""}<i class="${diverge && d.value < 0 ? "neg" : ""}" style="left:${left}%;width:${w}%;background:${d.color}"></i></span>
+      <span class="val">${fmtV(d.value)}${d.extra ? ` <small>${d.extra}</small>` : ""}</span></${tag}>`;
+  }).join("");
+  bindTips(el);
+  el.querySelectorAll("[data-act]").forEach(b => b.addEventListener("click", () => { const it = items.find(d => d.act === b.dataset.act); it && it.onClick(); }));
+}
+
+/* ---------- svg scatter ---------- */
+function scatter(id, pts, o) {
+  const el = document.getElementById(id);
+  if (!pts.length) { el.innerHTML = `<div class="empty">Ingen data i det valgte filter.</div>`; return; }
+  const W = Math.max(300, el.clientWidth || 520), H = Math.round(Math.min(380, W * .72));
+  const m = { l: 42, r: 12, t: 10, b: 40 };
+  const x = v => m.l + (v - o.x0) / (o.x1 - o.x0) * (W - m.l - m.r);
+  const y = v => H - m.b - (v - o.y0) / (o.y1 - o.y0) * (H - m.t - m.b);
+  let g = "";
+  for (const t of o.yt) g += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}"/><text x="${m.l - 8}" y="${y(t) + 4}" text-anchor="end">${o.yf(t)}</text>`;
+  for (const t of o.xt) g += `<text x="${x(t)}" y="${H - m.b + 16}" text-anchor="middle">${o.xf(t)}</text>`;
+  g += `<text class="axis-title" x="${(W + m.l) / 2}" y="${H - 4}" text-anchor="middle">${o.xl}</text>`;
+  g += `<text class="axis-title" transform="translate(11 ${(H - m.b + m.t) / 2}) rotate(-90)" text-anchor="middle">${o.yl}</text>`;
+  const dots = pts.map(p => `<circle class="pt${o.hi && p.key !== o.hi ? " fade" : ""}" cx="${x(p.x).toFixed(1)}" cy="${y(p.y).toFixed(1)}" r="6" fill="${p.color}" data-tip="${p.tip}" data-beer="${p.id}"/>`);
+  // draw highlighted series last so it sits on top
+  const order = o.hi ? pts.map((p, i) => [p.key === o.hi, i]).sort((a, b) => a[0] - b[0]).map(a => dots[a[1]]) : dots;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.xl)} mod ${esc(o.yl)}">${g}${order.join("")}</svg>`;
+  bindTips(el);
+}
+function legend(id, keys, hiKey, onPick) {
+  const el = document.getElementById(id);
+  el.innerHTML = keys.map(k => `<button class="chip" type="button" data-k="${esc(k)}" aria-pressed="${hiKey === k}"><span class="dot" style="background:${pc(k)}"></span>${esc(k)}</button>`).join("");
+  el.querySelectorAll("[data-k]").forEach(b => b.addEventListener("click", () => onPick(hiKey === b.dataset.k ? null : b.dataset.k)));
+}
+const ticks = (a, b, step) => { const t = []; for (let v = Math.ceil(a / step) * step; v <= b + 1e-9; v += step) t.push(+v.toFixed(4)); return t; };
+
+/* ---------- svg columns (small multiples) ---------- */
+function columns(title, rows, fmtV, note) {
+  const W = 200, H = 150, m = { l: 4, r: 4, t: 22, b: 22 };
+  const vals = rows.map(r => r.v).filter(v => v != null);
+  const hi = Math.max(...vals, 0) * 1.12 || 1;
+  const bw = (W - m.l - m.r) / rows.length;
+  const bars = rows.map((r, i) => {
+    if (r.v == null) return `<text x="${m.l + bw * i + bw / 2}" y="${H - m.b - 6}" text-anchor="middle">–</text><text x="${m.l + bw * i + bw / 2}" y="${H - 6}" text-anchor="middle">${r.k}</text>`;
+    const h = (r.v / hi) * (H - m.t - m.b), x = m.l + bw * i + bw * .18, w = bw * .64, y = H - m.b - h;
+    return `<path d="M${x},${H - m.b} V${y + 4} q0,-4 4,-4 H${x + w - 4} q4,0 4,4 V${H - m.b} Z" fill="var(--gold)" data-tip="${esc(`<b>${r.k}</b><div class="m">${fmtV(r.v)}${r.n != null ? ` · ${r.n} øl` : ""}</div>`)}"/>
+      <text x="${x + w / 2}" y="${y - 6}" text-anchor="middle" style="fill:var(--snow)">${fmtV(r.v)}</text>
+      <text x="${x + w / 2}" y="${H - 6}" text-anchor="middle">${r.k}</text>`;
+  }).join("");
+  return `<div class="panel"><h3>${title}</h3>${note ? `<p class="note">${note}</p>` : ""}<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}"><line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${H - m.b}" y2="${H - m.b}"/>${bars}</svg></div></div>`;
+}
+
+/* ---------- sections ---------- */
+function renderHitlist(F) {
+  const rated = F.filter(b => b.avg != null);
+  const top = [...rated].sort((a, b) => b.avg - a.avg).slice(0, 5);
+  const bot = [...rated].sort((a, b) => a.avg - b.avg).slice(0, 5);
+  rankList("fame", top, b => fmt(b.avg) + `<small>${b.y}</small>`);
+  rankList("shame", bot, b => fmt(b.avg) + `<small>${b.y}</small>`);
+  renderTable(F);
+}
+
+function renderTable(F) {
+  const ppl = peopleIn(F);
+  const cols = [
+    { k: "d", t: "Dato", v: b => b.d, f: b => dateLbl(b) },
+    { k: "name", t: "Øl", v: b => b.name.toLowerCase(), f: b => esc(b.name), cls: "beer-name" },
+    { k: "brew", t: "Bryggeri", v: b => (b.brew || "").toLowerCase(), f: b => esc(b.brew) },
+    { k: "type", t: "Stil", v: b => b.type || "", f: b => b.type ? `<span class="pill">${esc(b.type)}${b.type2 ? " · " + esc(b.type2) : ""}</span>` : "" },
+    { k: "abv", t: "%", n: 1, v: b => b.abv ?? -1, f: b => b.abv != null ? fmt(b.abv * 100, 1) : "–" },
+    { k: "price", t: "Kr", n: 1, v: b => b.price ?? -1, f: b => b.price != null ? fmt0(b.price) : "–" },
+    { k: "bag", t: "Bagmand", v: b => b.bag || "", f: b => b.bag ? `<span class="pdot" style="background:${pc(b.bag)}"></span>${esc(b.bag)}` : "" },
+    { k: "avg", t: "Snit", n: 1, v: b => b.avg ?? -1, f: b => `<b>${fmt(b.avg)}</b>` },
+    ...ppl.map(p => ({ k: "p:" + p, t: p, n: 1, v: b => b.r[p] ?? -1, f: b => b.r[p] == null ? "" : (b.haters.includes(p) ? `<span class="hate" title="Dagens Hater">${fmt(b.r[p])}</span>` : fmt(b.r[p])) })),
+  ];
+  const q = state.search.trim().toLowerCase();
+  let rows = q ? F.filter(b => (b.name + " " + (b.brew || "") + " " + (b.type || "") + " " + (b.type2 || "")).toLowerCase().includes(q)) : F;
+  const col = cols.find(c => c.k === state.sortKey) || cols[0];
+  rows = [...rows].sort((a, b) => { const x = col.v(a), y = col.v(b); return (x < y ? -1 : x > y ? 1 : 0) * state.sortDir; });
+  const tbl = document.getElementById("table");
+  tbl.innerHTML = `<thead><tr>${cols.map(c => `<th class="${c.n ? "n" : ""}" data-k="${c.k}" ${c.k === col.k ? `aria-sort="${state.sortDir > 0 ? "ascending" : "descending"}"` : ""} tabindex="0">${esc(c.t)}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map(b => `<tr data-beer="${b.id}">${cols.map(c => `<td class="${c.n ? "n" : ""} ${c.cls || ""}">${c.f(b)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${cols.length}" class="empty">Ingen øl matcher søgningen.</td></tr>`}</tbody>`;
+  tbl.querySelectorAll("th").forEach(th => {
+    const go = () => { if (state.sortKey === th.dataset.k) state.sortDir *= -1; else { state.sortKey = th.dataset.k; state.sortDir = th.classList.contains("n") ? -1 : 1; } renderTable(filtered()); };
+    th.addEventListener("click", go); th.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+  bindTips(tbl);
+}
+document.getElementById("search").addEventListener("input", e => { state.search = e.target.value; renderTable(filtered()); });
+
+function deviations(F) {
+  const out = [];
+  for (const b of F) for (const p of Object.keys(b.r)) {
+    const others = Object.entries(b.r).filter(([q]) => q !== p).map(([, v]) => v);
+    if (others.length) out.push({ beer: b, p, r: b.r[p], dev: b.r[p] - mean(others), others: mean(others) });
+  }
+  return out;
+}
+function renderHater(F) {
+  const ppl = peopleIn(F), dev = deviations(F);
+  bars("harsh", ppl.map(p => {
+    const d = dev.filter(x => x.p === p), v = mean(d.map(x => x.dev));
+    return { label: p, value: v, dot: pc(p), color: v < 0 ? "var(--red)" : "var(--pine)", tip: `<b>${esc(p)}</b><div class="m">Rater ${fmt(Math.abs(v))} point ${v < 0 ? "under" : "over"} de andre · ${d.length} øl</div>` };
+  }).sort((a, b) => a.value - b.value), { diverge: true, fmtV: v => (v > 0 ? "+" : "") + fmt(v) });
+  bars("haterCount", ppl.map(p => {
+    const n = F.filter(b => b.haters.includes(p)).length, present = F.filter(b => b.r[p] != null).length;
+    return { label: p, value: n, dot: pc(p), color: pc(p), extra: present ? fmt(n / present * 100, 0) + "%" : "", tip: `<b>${esc(p)}</b><div class="m">${n} af ${present} dage som Dagens Hater</div>` };
+  }).sort((a, b) => b.value - a.value), { fmtV: fmt0 });
+  const hate = [...dev].sort((a, b) => a.dev - b.dev).slice(0, 6);
+  const love = [...dev].sort((a, b) => b.dev - a.dev).slice(0, 6);
+  const who = r => `<span class="pdot" style="background:${pc(r.p)}"></span>${esc(r.p)} gav ${fmt(r.r)} · de andre ${fmt(r.others)}`;
+  rankList("bigHate", hate, r => fmt(r.dev), who);
+  rankList("bigLove", love, r => "+" + fmt(r.dev), who);
+  const sp = [...F].filter(b => Object.keys(b.r).length > 2).sort((a, b) => b.spread - a.spread).slice(0, 6);
+  rankList("split", sp, b => fmt(b.spread), b => {
+    const e = Object.entries(b.r).sort((x, y) => x[1] - y[1]);
+    return `${esc(e[0][0])} ${fmt(e[0][1])} ↔ ${esc(e[e.length - 1][0])} ${fmt(e[e.length - 1][1])}`;
+  });
+}
+
+function renderSmag(F) {
+  const ppl = peopleIn(F), el = document.getElementById("matrix");
+  if (ppl.length < 2) { el.innerHTML = `<div class="empty">Kræver mindst to personer.</div>`; document.getElementById("personAvg").innerHTML = ""; return; }
+  const cells = {};
+  let lo = Infinity, hi = 0;
+  for (const a of ppl) for (const b of ppl) if (a !== b) {
+    const both = F.filter(x => x.r[a] != null && x.r[b] != null);
+    const v = both.length >= 4 ? mean(both.map(x => Math.abs(x.r[a] - x.r[b]))) : null;
+    cells[a + "|" + b] = { v, n: both.length };
+    if (v != null) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  }
+  el.style.gridTemplateColumns = `minmax(60px, auto) repeat(${ppl.length}, minmax(0, 1fr))`;
+  let h = `<div></div>` + ppl.map(p => `<div class="h"><span class="pdot" style="background:${pc(p)}"></span>${esc(p)}</div>`).join("");
+  for (const a of ppl) {
+    h += `<div class="rh">${esc(a)}</div>`;
+    for (const b of ppl) {
+      if (a === b) { h += `<div class="c self">–</div>`; continue; }
+      const c = cells[a + "|" + b];
+      if (c.v == null) { h += `<div class="c self" data-tip="${esc(`<b>${esc(a)} &amp; ${esc(b)}</b><div class="m">For få fælles øl (${c.n})</div>`)}">·</div>`; continue; }
+      const t = hi > lo ? 1 - (c.v - lo) / (hi - lo) : 1;
+      h += `<div class="c" style="background:color-mix(in srgb, var(--gold) ${Math.round(12 + t * 70)}%, var(--panel))${t > .55 ? ";color:var(--night)" : ""}" data-tip="${esc(`<b>${esc(a)} &amp; ${esc(b)}</b><div class="m">${fmt(c.v)} point fra hinanden i snit · ${c.n} fælles øl</div>`)}">${fmt(c.v)}</div>`;
+    }
+  }
+  el.innerHTML = h; bindTips(el);
+  bars("personAvg", ppl.map(p => {
+    const v = F.filter(b => b.r[p] != null).map(b => b.r[p]);
+    return { label: p, value: mean(v), dot: pc(p), color: pc(p), tip: `<b>${esc(p)}</b><div class="m">${fmt(mean(v))} i snit over ${v.length} øl</div>` };
+  }).sort((a, b) => b.value - a.value), { max: 5 });
+}
+
+function renderBag(F) {
+  const el = document.getElementById("bagcards");
+  const list = PEOPLE.map(p => ({ p, beers: F.filter(b => b.bag === p && b.avg != null) })).filter(x => x.beers.length);
+  if (!list.length) { el.innerHTML = `<div class="empty">Ingen øl i det valgte filter.</div>`; return; }
+  list.forEach(x => { x.avg = mean(x.beers.map(b => b.avg)); x.kr = x.beers.reduce((a, b) => a + (b.price || 0), 0); });
+  list.sort((a, b) => b.avg - a.avg);
+  el.innerHTML = list.map((x, i) => {
+    const s = [...x.beers].sort((a, b) => b.avg - a.avg), best = s[0], worst = s[s.length - 1];
+    return `<article class="bagcard">
+      <header><span class="avatar" style="background:${pc(x.p)}">${esc(x.p.slice(0, 2).toUpperCase())}</span><div><h3>${esc(x.p)}</h3><div class="note" style="margin:0;font-size:var(--t-xs);color:var(--muted)">Nr. ${i + 1} som bagmand</div></div></header>
+      <div class="kv"><div><b>${fmt(x.avg)}</b><span>snit</span></div><div><b>${x.beers.length}</b><span>øl</span></div><div><b>${fmt0(x.kr)}</b><span>kr</span></div></div>
+      <button class="pick" type="button" data-beer="${best.id}"><span class="tag best">Bedst</span><b>${esc(best.name)}</b><span class="num">${fmt(best.avg)}</span></button>
+      ${s.length > 1 ? `<button class="pick" type="button" data-beer="${worst.id}"><span class="tag worst">Værst</span><b>${esc(worst.name)}</b><span class="num">${fmt(worst.avg)}</span></button>` : ""}
+    </article>`;
+  }).join("");
+  bindTips(el);
+}
+
+function renderStyles(F) {
+  const by = {};
+  for (const b of F) if (b.type && b.avg != null) (by[b.type] = by[b.type] || []).push(b);
+  bars("styleBars", Object.entries(by).map(([t, l]) => ({
+    label: t, value: mean(l.map(b => b.avg)), extra: `(${l.length})`, act: t, onClick: () => setType(t),
+    color: state.type === t ? "var(--gold)" : "var(--beer)",
+    tip: `<b>${esc(t)}</b><div class="m">${l.length} øl · snit ${fmt(mean(l.map(b => b.avg)))}</div>Klik for at filtrere`,
+  })).sort((a, b) => b.value - a.value), { max: 5 });
+  const sb = {};
+  for (const b of F) if (b.type2) { const k = b.type + " · " + b.type2; (sb[k] = sb[k] || []).push(b); }
+  bars("subBars", Object.entries(sb).map(([t, l]) => ({
+    label: t, value: l.length, color: "var(--pine)", extra: "snit " + fmt(mean(l.map(b => b.avg).filter(v => v != null)), 1),
+    tip: `<b>${esc(t)}</b><div class="m">${l.length} øl · snit ${fmt(mean(l.map(b => b.avg).filter(v => v != null)))}</div>`,
+  })).sort((a, b) => b.value - a.value).slice(0, 12), { fmtV: fmt0 });
+}
+
+function renderAlko(F) {
+  const pts = F.filter(b => b.abv != null && b.avg != null);
+  const bagsIn = PEOPLE.filter(p => pts.some(b => b.bag === p));
+  if (state.hiAbv && !bagsIn.includes(state.hiAbv)) state.hiAbv = null;
+  legend("abvLegend", bagsIn, state.hiAbv, k => { state.hiAbv = k; renderAlko(filtered()); });
+  const xmax = Math.max(0.2, ...pts.map(b => b.abv)) * 100;
+  scatter("abvChart", pts.map(b => ({ id: b.id, key: b.bag, x: b.abv * 100, y: b.avg, color: pc(b.bag), tip: beerTip(b) })),
+    { x0: 0, x1: Math.ceil(xmax / 2) * 2, y0: 0, y1: 5, xt: ticks(0, xmax, 4), yt: [0, 1, 2, 3, 4, 5], xf: v => v + "%", yf: v => v, xl: "Alkohol %", yl: "Snit-rating", hi: state.hiAbv });
+  const ppl = peopleIn(F);
+  bars("units", ppl.map(p => {
+    const l = F.filter(b => b.r[p] != null && b.units != null), u = l.reduce((a, b) => a + b.units, 0);
+    return { label: p, value: u, dot: pc(p), color: pc(p), tip: `<b>${esc(p)}</b><div class="m">${fmt(u, 1)} genstande over ${l.length} øl</div>` };
+  }).sort((a, b) => b.value - a.value), { fmtV: v => fmt(v, 0) });
+  rankList("strong", [...pts].sort((a, b) => b.abv - a.abv).slice(0, 5), b => fmt(b.abv * 100, 1) + "%" + `<small>snit ${fmt(b.avg)}</small>`);
+}
+
+function renderPris(F) {
+  const pts = F.filter(b => b.price != null && b.avg != null);
+  const bagsIn = PEOPLE.filter(p => pts.some(b => b.bag === p));
+  if (state.hiPrice && !bagsIn.includes(state.hiPrice)) state.hiPrice = null;
+  legend("priceLegend", bagsIn, state.hiPrice, k => { state.hiPrice = k; renderPris(filtered()); });
+  const xmax = Math.max(20, ...pts.map(b => b.price));
+  scatter("priceChart", pts.map(b => ({ id: b.id, key: b.bag, x: b.price, y: b.avg, color: pc(b.bag), tip: beerTip(b) })),
+    { x0: 0, x1: Math.ceil(xmax / 20) * 20, y0: 0, y1: 5, xt: ticks(0, xmax, 20), yt: [0, 1, 2, 3, 4, 5], xf: v => v, yf: v => v, xl: "Pris i kr", yl: "Snit-rating", hi: state.hiPrice });
+  const val = pts.filter(b => b.avg > 0).map(b => ({ beer: b, kpp: b.price / b.avg })).sort((a, b) => a.kpp - b.kpp).slice(0, 5);
+  rankList("value", val, r => fmt(r.kpp, 1) + " kr/pt" + `<small>${fmt0(r.beer.price)} kr · ${fmt(r.beer.avg)}</small>`);
+  const pricey = pts.filter(b => b.avg < 3.4).sort((a, b) => b.price - a.price).slice(0, 5);
+  rankList("pricey", pricey, b => fmt0(b.price) + " kr" + `<small>snit ${fmt(b.avg)}</small>`);
+}
+
+function renderQuiz(F) {
+  const el = document.getElementById("quizBody");
+  const Q = F.filter(b => b.g);
+  if (!Q.length) {
+    el.innerHTML = `<div class="panel empty">Flagquizzen fandtes kun i 2025. Vælg 2025 i filtret for at se den.</div>`;
+    return;
+  }
+  const ppl = PEOPLE.filter(p => Q.some(b => b.g[p] != null && b.r[p] != null));
+  el.innerHTML = `<div class="grid2">
+      <div class="panel"><h3>Rigtige gæt</h3><p class="note">Antal rigtige ud af de flag man kunne gætte på.</p><div class="bars" id="quizBars"></div></div>
+      <div class="panel"><h3>Bagmandens flag</h3><p class="note">Hvor mange gættede i snit rigtigt på hver bagmands lande? Lavt tal er et ondt flag.</p><div class="bars" id="quizBag"></div></div>
+    </div>
+    <div class="panel" style="margin-top:20px"><h3>Alle flag</h3><p class="note">Sorteret fra sværest til nemmest. Grønne streger er rigtige gæt.</p><div class="flags" id="flagGrid"></div></div>`;
+  const canGuess = (b, p) => p !== b.bag && b.g[p] != null && b.r[p] != null;
+  bars("quizBars", ppl.map(p => {
+    const l = Q.filter(b => canGuess(b, p)), c = l.filter(b => b.g[p] === 1).length;
+    return { label: p, value: c, dot: pc(p), color: pc(p), extra: `/ ${l.length}`, tip: `<b>${esc(p)}</b><div class="m">${c} rigtige af ${l.length} (${fmt(l.length ? c / l.length * 100 : 0, 0)}%)</div>` };
+  }).sort((a, b) => b.value - a.value), { fmtV: fmt0 });
+  const flagStats = Q.map(b => { const gs = PEOPLE.filter(p => canGuess(b, p)); return { b, n: gs.length, c: gs.filter(p => b.g[p] === 1).length, gs }; });
+  bars("quizBag", PEOPLE.filter(p => Q.some(b => b.bag === p)).map(p => {
+    const l = flagStats.filter(f => f.b.bag === p), v = mean(l.map(f => f.n ? f.c / f.n * 100 : 0));
+    return { label: p, value: v, dot: pc(p), color: pc(p), tip: `<b>${esc(p)}</b><div class="m">${l.length} flag: ${l.map(f => esc(f.b.land)).join(", ")}</div>` };
+  }).sort((a, b) => a.value - b.value), { max: 100, fmtV: v => fmt(v, 0) + "%" });
+  const grid = document.getElementById("flagGrid");
+  grid.innerHTML = [...flagStats].sort((a, b) => a.c / (a.n || 1) - b.c / (b.n || 1)).map(f => `
+    <button class="flag" type="button" data-beer="${f.b.id}" data-tip="${esc(`<b>${esc(f.b.land)}</b><div class="m">${dateLbl(f.b)} · flag fra ${esc(f.b.bag)}</div>Rigtige: ${f.gs.filter(p => f.b.g[p] === 1).map(esc).join(", ") || "ingen"}`)}">
+      <span class="fimg">${f.b.flag ? `<img src="${esc(f.b.flag)}" alt="Flag: ${esc(f.b.land)}" loading="lazy" referrerpolicy="no-referrer">` : "?"}</span>
+      <b>${esc(f.b.land)}</b>
+      <span class="meter">${f.gs.map(p => `<i class="${f.b.g[p] === 1 ? "on" : ""}"></i>`).join("")}</span>
+      <small>${f.c} af ${f.n} rigtige</small>
+    </button>`).join("");
+  grid.querySelectorAll("img").forEach(img => img.addEventListener("error", () => { img.parentElement.textContent = img.alt.replace("Flag: ", "").slice(0, 3).toUpperCase(); }));
+  bindTips(grid);
+}
+
+function renderYears() {
+  const B = BEERS.filter(matchNonYear);
+  const per = y => B.filter(b => b.y === y);
+  const row = fn => YEARS.map(y => { const l = per(y); return { k: String(y), v: l.length ? fn(l) : null, n: l.length }; });
+  const el = document.getElementById("mults");
+  el.innerHTML = [
+    columns("Antal øl", YEARS.map(y => ({ k: String(y), v: per(y).length })), fmt0),
+    columns("Snit-rating", row(l => mean(l.map(b => b.avg).filter(v => v != null))), v => fmt(v)),
+    columns("Snit-alkohol", row(l => mean(l.filter(b => b.abv != null).map(b => b.abv * 100))), v => fmt(v, 1) + "%"),
+    columns("Snit-pris", row(l => mean(l.filter(b => b.price != null).map(b => b.price))), v => fmt0(v) + " kr"),
+  ].join("");
+  bindTips(el);
+}
+
+/* ---------- modal ---------- */
+const dlg = document.getElementById("dlg");
+let modalList = [], modalIdx = 0;
+function openBeer(id) {
+  const F = filtered();
+  modalList = F.some(b => b.id === id) ? F : BEERS;
+  modalIdx = modalList.findIndex(b => b.id === id);
+  drawBeer();
+  hideTip();
+  if (!dlg.open) { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", ""); }
+  document.getElementById("closeB").focus();
+  const b = modalList[modalIdx];
+  if (b.avg >= 4.1) celebrate();
+}
+function drawBeer() {
+  const b = modalList[modalIdx];
+  const ratings = Object.entries(b.r).sort((x, y) => y[1] - x[1]);
+  const facts = [
+    b.type && `${esc(b.type)}${b.type2 ? " · " + esc(b.type2) : ""}`,
+    b.abv != null && fmt(b.abv * 100, 1) + " %",
+    b.price != null && fmt0(b.price) + " kr",
+    b.units != null && fmt(b.units, 1) + " genstande",
+    b.n && "Øl nr. " + b.n,
+    b.land && "Flag: " + esc(b.land),
+  ].filter(Boolean);
+  document.getElementById("dlgBody").innerHTML = `<div class="card">
+    <div class="card-top">
+      <div class="when">${b.adv ? b.advNo + ". søndag i advent · " : "Låge " + dayLbl(b) + " · "}${dateLbl(b)}</div>
+      <h3>${esc(b.name)}</h3>
+      <div class="brew">${esc(b.brew || "")}</div>
+      <div class="big num">${fmt(b.avg)}</div>
+    </div>
+    <div class="card-body">
+      <div class="facts">${facts.map(f => `<span class="pill">${f}</span>`).join("")}</div>
+      <div><span class="pdot" style="background:${pc(b.bag)}"></span>Bagmand: <b>${esc(b.bag || "ukendt")}</b>${b.haters.length ? ` &nbsp;·&nbsp; Dagens Hater: <b style="color:var(--red)">${b.haters.map(esc).join(" &amp; ")}</b>` : ""}</div>
+      <div class="rbars">${ratings.map(([p, v]) => `<div class="rbar${b.haters.includes(p) ? " hater" : ""}"><span class="who"><span class="pdot" style="background:${pc(p)}"></span>${esc(p)}</span><span class="tr"><i style="width:${v / 5 * 100}%"></i></span><span class="v">${fmt(v)}</span></div>`).join("")}</div>
+      <div class="card-foot">
+        ${b.url ? `<a href="${esc(b.url)}" target="_blank" rel="noopener">Se på Untappd ↗</a>` : "<span></span>"}
+        <div class="card-nav">
+          ${b.live && writable ? `<button class="btn gold" type="button" id="editB">Ret / rate</button>` : ""}
+          <button class="btn ghost" type="button" id="prevB" ${modalIdx === 0 ? "disabled" : ""} aria-label="Forrige øl">←</button>
+          <button class="btn ghost" type="button" id="nextB" ${modalIdx === modalList.length - 1 ? "disabled" : ""} aria-label="Næste øl">→</button>
+          <button class="btn" type="button" id="closeB">Luk</button>
+        </div>
+      </div>
+    </div></div>`;
+  document.getElementById("prevB").onclick = () => { if (modalIdx > 0) { modalIdx--; drawBeer(); } };
+  document.getElementById("nextB").onclick = () => { if (modalIdx < modalList.length - 1) { modalIdx++; drawBeer(); } };
+  document.getElementById("closeB").onclick = () => dlg.close();
+  const eb = document.getElementById("editB");
+  if (eb) eb.onclick = () => { dlg.close(); openEntry({ key: b.id.slice(2) }); };
+}
+// a live snapshot can change or remove the beer that is open
+function refreshModal() {
+  if (!dlg.open || !modalList.length) return;
+  const id = modalList[modalIdx].id;
+  if (!BEERS.some(b => b.id === id)) { dlg.close(); return; }
+  const F = filtered();
+  modalList = F.some(b => b.id === id) ? F : BEERS;
+  modalIdx = modalList.findIndex(b => b.id === id);
+  drawBeer();
+}
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+dlg.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft" && modalIdx > 0) { modalIdx--; drawBeer(); }
+  if (e.key === "ArrowRight" && modalIdx < modalList.length - 1) { modalIdx++; drawBeer(); }
+});
+
+/* ---------- effects ---------- */
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const cf = document.getElementById("confetti"), cx = cf.getContext("2d");
+let bits = [], cfRun = false;
+function celebrate() {
+  if (reduce) return;
+  const st = document.getElementById("stamp");
+  st.classList.add("go"); setTimeout(() => st.classList.remove("go"), 900);
+  cf.width = innerWidth; cf.height = innerHeight;
+  const cols = ["#f5c451", "#e5383b", "#eef3ff", "#2fa36b", "#ffe39a"];
+  for (let i = 0; i < 160; i++) bits.push({ x: innerWidth / 2, y: innerHeight * .4, vx: (Math.random() - .5) * 16, vy: Math.random() * -14 - 4, r: Math.random() * 6 + 3, c: cols[i % cols.length], a: Math.random() * 6, life: 120 });
+  if (!cfRun) { cfRun = true; requestAnimationFrame(cfStep); }
+}
+function cfStep() {
+  cx.clearRect(0, 0, cf.width, cf.height);
+  bits = bits.filter(b => b.life-- > 0 && b.y < cf.height + 20);
+  for (const b of bits) {
+    b.vy += .38; b.vx *= .985; b.x += b.vx; b.y += b.vy; b.a += .2;
+    cx.save(); cx.translate(b.x, b.y); cx.rotate(b.a); cx.fillStyle = b.c; cx.fillRect(-b.r / 2, -b.r / 4, b.r, b.r / 2); cx.restore();
+  }
+  if (bits.length) requestAnimationFrame(cfStep); else { cfRun = false; cx.clearRect(0, 0, cf.width, cf.height); }
+}
+(function snow() {
+  if (reduce) return;
+  const c = document.getElementById("snow"), g = c.getContext("2d");
+  let flakes = [];
+  const size = () => { c.width = innerWidth; c.height = innerHeight; flakes = Array.from({ length: Math.min(140, Math.round(innerWidth / 9)) }, () => ({ x: Math.random() * c.width, y: Math.random() * c.height, r: Math.random() * 2.2 + .6, s: Math.random() * .7 + .3, w: Math.random() * 6.28 })); };
+  size(); addEventListener("resize", size);
+  (function step() {
+    g.clearRect(0, 0, c.width, c.height); g.fillStyle = "rgba(238,243,255,.75)";
+    for (const f of flakes) {
+      f.y += f.s; f.w += .01; f.x += Math.sin(f.w) * .4;
+      if (f.y > c.height + 4) { f.y = -4; f.x = Math.random() * c.width; }
+      g.beginPath(); g.arc(f.x, f.y, f.r, 0, 6.283); g.fill();
+    }
+    requestAnimationFrame(step);
+  })();
+})();
+(function bubbles() {
+  const g = document.getElementById("beerFill");
+  for (let i = 0; i < 14; i++) {
+    const b = document.createElement("span"); b.className = "bubble";
+    b.style.left = (8 + Math.random() * 84) + "%"; b.style.animationDelay = (Math.random() * 3) + "s"; b.style.animationDuration = (2 + Math.random() * 2.5) + "s";
+    g.appendChild(b);
+  }
+})();
+
+/* ---------- live year: entry form ---------- */
+const $ = id => document.getElementById(id);
+const entryDlg = $("entryDlg"), ef = $("entryForm");
+const fld = { date: $("fDate"), adv: $("fAdv"), n: $("fN"), name: $("fName"), brew: $("fBrew"), type: $("fType"), type2: $("fType2"), abv: $("fAbv"), price: $("fPrice"), bag: $("fBag"), url: $("fUrl") };
+const STEPS = Array.from({ length: 21 }, (_, i) => i / 4);
+$("fRates").innerHTML = PEOPLE.map(p => `<label class="rate" data-p="${esc(p)}"><span><span class="pdot" style="background:${pc(p)}"></span>${esc(p)}</span>
+  <select data-p="${esc(p)}" aria-label="${esc(p)}s rating"><option value="">–</option>${STEPS.map(v => `<option value="${v}">${fmt(v)}</option>`).join("")}</select></label>`).join("");
+fld.bag.innerHTML = `<option value="">Vælg…</option>` + PEOPLE.map(p => `<option>${esc(p)}</option>`).join("");
+fld.date.min = `${LIVE}-11-27`; fld.date.max = `${LIVE}-12-31`;
+const rateSel = p => $("fRates").querySelector(`select[data-p="${p}"]`);
+let entry = { key: null, orig: null }; // the db doc being edited; both null for a new beer
+
+const isoDay = t => `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+function defaultDay() {
+  const today = isoDay(new Date());
+  if (today >= fld.date.min && today <= fld.date.max) return today;
+  for (let d = 1; d <= 24; d++) { const ds = `${LIVE}-12-${String(d).padStart(2, "0")}`; if (!liveDocs.has(dayKey(ds, false))) return ds; }
+  return `${LIVE}-12-24`;
+}
+const decStr = v => v == null ? "" : String(+v.toFixed(4)).replace(".", ",");
+function msg(text, kind = "") { const m = $("fMsg"); m.textContent = text; m.className = "form-msg" + (kind ? " " + kind : ""); }
+
+function loadEntry(key, x, day) {
+  entry = { key: x ? key : null, orig: x || null };
+  const v = x ? fromDoc(x) : null;
+  fld.date.value = v ? v.d : day; fld.adv.checked = v ? v.adv : false;
+  fld.n.value = v && v.n ? v.n : ""; fld.name.value = v && x.name ? v.name : ""; fld.brew.value = v ? v.brew || "" : "";
+  fld.type.value = v ? v.type || "" : ""; fld.type2.value = v ? v.type2 || "" : "";
+  fld.abv.value = v && v.abv != null ? decStr(v.abv * 100) : ""; fld.price.value = v && v.price != null ? decStr(v.price) : "";
+  fld.bag.value = v ? v.bag || "" : ""; fld.url.value = v ? v.url || "" : "";
+  for (const p of PEOPLE) rateSel(p).value = v && v.r[p] != null ? String(v.r[p]) : "";
+  Object.values(fld).forEach(el => el.removeAttribute("aria-invalid"));
+  syncEntryHead(); showHater(); msg("");
+  const del = $("fDel"); del.hidden = !x; del.textContent = "Slet øl"; delete del.dataset.armed;
+}
+function syncEntryHead() {
+  const d = fld.date.value, b = d ? { d } : null;
+  $("entryMode").textContent = (entry.key ? "Retter øl" : "Ny øl") + (b ? " · " + (fld.adv.checked ? "advent · " : "låge " + dayLbl(b) + " · ") + dateLbl(b) : "");
+  $("entryTitle").textContent = entry.key ? (fld.name.value || "Ret øl") : "Registrér øl";
+}
+function formRatings() {
+  const r = {};
+  for (const p of PEOPLE) { const v = rateSel(p).value; r[p] = v === "" ? null : +v; }
+  return r;
+}
+function showHater() {
+  const r = formRatings(), hs = hatersOf(r);
+  $("fRates").querySelectorAll(".rate").forEach(el => el.classList.toggle("hater", hs.includes(el.dataset.p)));
+  $("fHater").innerHTML = hs.length ? `Dagens Hater lige nu: <b>${hs.map(esc).join(" &amp; ")}</b> med ${fmt(r[hs[0]])}` : "Dagens Hater findes når mindst to har ratet.";
+}
+function openEntry({ key, d } = {}) {
+  if (!beersCol) return;
+  if (key && liveDocs.has(key)) loadEntry(key, liveDocs.get(key));
+  else { const day = d || defaultDay(), k = dayKey(day, false); loadEntry(k, liveDocs.get(k), day); }
+  hideTip();
+  if (!entryDlg.open) { if (entryDlg.showModal) entryDlg.showModal(); else entryDlg.setAttribute("open", ""); }
+  (fld.name.value ? $("fRates").querySelector("select") : fld.name).focus();
+}
+// picking a day (or advent) that already has a beer pulls that beer up instead of overwriting it
+function onDayChange() {
+  const k = dayKey(fld.date.value, fld.adv.checked);
+  if (fld.date.value && k !== entry.key && liveDocs.has(k)) { loadEntry(k, liveDocs.get(k)); msg("Den dag har allerede en øl. Den er hentet frem, så du kan rette eller rate den."); }
+  else syncEntryHead();
+}
+fld.date.addEventListener("change", onDayChange);
+fld.adv.addEventListener("change", onDayChange);
+fld.name.addEventListener("input", syncEntryHead);
+$("fRates").addEventListener("change", showHater);
+$("fCancel").addEventListener("click", () => entryDlg.close());
+
+function parseDec(s, lo, hi) {
+  s = s.trim().replace(/\s/g, "").replace(",", ".");
+  if (!s) return null;
+  const v = Number(s);
+  return isFinite(v) && v >= lo && v <= hi ? v : NaN;
+}
+function busy(on) { ["fSave", "fDel", "fCancel"].forEach(id => $(id).disabled = on); }
+function failed(err) {
+  const code = err && err.code;
+  if (code === "invalid_argument") { writable = false; showLive(); update(); msg("Siden afviste at gemme. Din konto har ikke skriveadgang endnu, så bed ejeren om at give dig adgang.", "err"); }
+  else if (code === "quota_exceeded") msg("Databasen er fuld. Slet nogle øl og prøv igen.", "err");
+  else msg(`Kunne ikke gemme lige nu (${code || "ukendt fejl"}). Prøv igen om lidt.`, "err");
+}
+ef.addEventListener("submit", async e => {
+  e.preventDefault();
+  const bad = (el, text) => { el.setAttribute("aria-invalid", "true"); el.focus(); msg(text, "err"); };
+  Object.values(fld).forEach(el => el.removeAttribute("aria-invalid"));
+  const d = fld.date.value;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d < fld.date.min || d > fld.date.max) return bad(fld.date, `Vælg en dato i december ${LIVE}.`);
+  const name = fld.name.value.replace(/\s+/g, " ").trim();
+  if (!name) return bad(fld.name, "Øllen skal have et navn.");
+  const n = parseDec(fld.n.value, 0, 999);
+  if (Number.isNaN(n) || (n != null && !Number.isInteger(n))) return bad(fld.n, "Øl nr. skal være et helt tal.");
+  const abv = parseDec(fld.abv.value, 0, 100);
+  if (Number.isNaN(abv)) return bad(fld.abv, "Procent skal være et tal mellem 0 og 100, fx 6,5.");
+  const price = parseDec(fld.price.value, 0, 100000);
+  if (Number.isNaN(price)) return bad(fld.price, "Prisen skal være et tal i kroner.");
+  let url = fld.url.value.trim();
+  if (url && !/^https?:\/\/\S+$/i.test(url)) return bad(fld.url, "Linket skal starte med https://");
+  url = url.replace(/^http:\/\//i, "https://");
+  const txt = el => el.value.replace(/\s+/g, " ").trim() || null;
+  const details = {
+    d, adv: fld.adv.checked, n: n || null, name, brew: txt(fld.brew), type: txt(fld.type), type2: txt(fld.type2),
+    abv: abv == null ? null : +(abv / 100).toFixed(4), price, url: url || null, bag: fld.bag.value || null, updated: new Date().toISOString(),
+  };
+  const r = formRatings(), given = Object.fromEntries(Object.entries(r).filter(([, v]) => v != null));
+  const key = dayKey(d, details.adv), isNew = !entry.key;
+  busy(true); msg("Gemmer…");
+  try {
+    const ref = beersCol.doc(key);
+    if (entry.key && entry.key !== key) {
+      // moved to another day: write the whole beer there, then drop the old row
+      await ref.set({ ...details, r: given });
+      await beersCol.doc(entry.key).delete();
+    } else {
+      const snap = await ref.get();
+      if (snap.exists) {
+        // merge only the ratings this form changed, so two people rating at once don't erase each other
+        const was = (entry.orig && entry.orig.r) || {}, changed = {};
+        for (const p of PEOPLE) {
+          const o = typeof was[p] === "number" ? was[p] : null;
+          if (r[p] !== o && (entry.key || r[p] != null)) changed[p] = r[p];
+        }
+        await ref.update(Object.keys(changed).length ? { ...details, r: changed } : details);
+      } else await ref.set({ ...details, r: given, created: details.updated });
+    }
+    entry = { key, orig: { ...details, r: given } };
+    msg(isNew ? "Gemt. Skål!" : "Rettelserne er gemt.", "ok");
+    if (isNew) celebrate();
+    setTimeout(() => { if (entryDlg.open && entry.key === key) entryDlg.close(); }, 700);
+  } catch (err) { failed(err); }
+  finally { busy(false); }
+});
+$("fDel").addEventListener("click", async () => {
+  const del = $("fDel");
+  if (!entry.key) return;
+  if (!del.dataset.armed) { del.dataset.armed = "1"; del.textContent = "Sikker? Klik igen"; return; }
+  busy(true); msg("Sletter…");
+  try { await beersCol.doc(entry.key).delete(); entryDlg.close(); }
+  catch (err) { failed(err); }
+  finally { busy(false); }
+});
+
+/* ---------- live year: export to the spreadsheet ---------- */
+const exportDlg = $("exportDlg");
+const SHEET_COLS = ["Dato", "Advent", "Øl#", "Øl", "Bryggeri", "Pris", "Type", "Type2", "Procent", "Land", "Untappd", "Bagmand", ...PEOPLE, "Dagens Hater", ...PEOPLE.map(p => p + "Gæt"), "Landeflag"];
+function exportText() {
+  const da = $("xFmt").value === "da";
+  const num = v => v == null ? "" : da ? String(v).replace(".", ",") : String(v);
+  const date = d => da ? `${d.slice(8)}-${d.slice(5, 7)}-${d.slice(0, 4)}` : d;
+  const cell = v => String(v ?? "").replace(/[\t\r\n]+/g, " ");
+  const rows = BEERS.filter(b => b.live).map(b => [
+    date(b.d), b.adv ? "Advent" : "", b.n || "", b.name, b.brew, num(b.price), b.type, b.type2, num(b.abv), "", b.url, b.bag,
+    ...PEOPLE.map(p => num(b.r[p])), b.haters[0] || "", ...PEOPLE.map(() => ""), "",
+  ].map(cell).join("\t"));
+  if ($("xHead").checked) rows.unshift(SHEET_COLS.join("\t"));
+  return rows.join("\n");
+}
+function drawExport() {
+  const n = BEERS.filter(b => b.live).length;
+  $("xText").value = exportText();
+  $("xMsg").textContent = n ? `${n} øl klar til at kopiere.` : `Ingen øl registreret i ${LIVE} endnu.`;
+  $("xMsg").className = "form-msg";
+}
+$("xYear").textContent = LIVE;
+$("xFmt").addEventListener("change", drawExport);
+$("xHead").addEventListener("change", drawExport);
+$("xClose").addEventListener("click", () => exportDlg.close());
+$("xCopy").addEventListener("click", async () => {
+  const ta = $("xText"), m = $("xMsg");
+  try { await navigator.clipboard.writeText(ta.value); m.textContent = "Kopieret. Indsæt i regnearket med Ctrl+V."; m.className = "form-msg ok"; return; } catch (e) {}
+  ta.focus(); ta.select();
+  let ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+  m.textContent = ok ? "Kopieret. Indsæt i regnearket med Ctrl+V." : "Teksten er markeret. Kopiér den med Ctrl+C.";
+  m.className = "form-msg" + (ok ? " ok" : "");
+});
+$("exportBtn").addEventListener("click", () => { drawExport(); if (exportDlg.showModal) exportDlg.showModal(); else exportDlg.setAttribute("open", ""); });
+$("addBtn").addEventListener("click", () => openEntry());
+
+let auth = null; // Firebase login, when the page runs on its own site; null inside the claude.ai viewer
+function showLive() {
+  const n = BEERS.filter(b => b.live).length, out = auth && !auth.user;
+  $("live").hidden = !liveOn;
+  $("liveStatus").textContent = `Live ${LIVE} · ${n} øl registreret` + (out ? "" : writable ? "" : " · kun læseadgang");
+  $("addBtn").hidden = !writable;
+  $("exportBtn").hidden = !n;
+  $("loginBtn").hidden = !out;
+  $("logoutBtn").hidden = !(auth && auth.user);
+}
+$("loginBtn").addEventListener("click", () => auth && auth.signIn().catch(e => {
+  if (e && e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") $("liveStatus").textContent = "Login mislykkedes. Prøv igen.";
+}));
+$("logoutBtn").addEventListener("click", () => auth && auth.signOut());
+
+/* ---------- live year: Firebase backend for the stand-alone site ---------- */
+// Gives the page the same small surface it uses from the artifact db: doc(id).get/set/update/delete and onSnapshot.
+async function firebaseBackend(cfg) {
+  const V = "https://www.gstatic.com/firebasejs/10.14.1/";
+  const [{ initializeApp }, fs, fa] = await Promise.all([import(V + "firebase-app.js"), import(V + "firebase-firestore.js"), import(V + "firebase-auth.js")]);
+  const app = initializeApp(cfg), store = fs.getFirestore(app), fauth = fa.getAuth(app);
+  const col = fs.collection(store, "beers");
+  // Firestore's permission-denied plays the role of the artifact db's invalid_argument (a refused write)
+  const rethrow = e => { throw { code: e && e.code === "permission-denied" ? "invalid_argument" : e && e.code === "resource-exhausted" ? "quota_exceeded" : "unavailable", message: e && e.message }; };
+  auth = {
+    user: null,
+    signIn: () => fa.signInWithPopup(fauth, new fa.GoogleAuthProvider()),
+    signOut: () => fa.signOut(fauth),
+  };
+  fa.onAuthStateChanged(fauth, u => {
+    auth.user = u; writable = !!u;
+    if (liveOn) { showLive(); renderCalendars(); refreshModal(); }
+  });
+  return {
+    doc: id => {
+      const ref = fs.doc(col, id);
+      return {
+        get: () => fs.getDoc(ref).then(x => ({ id, exists: x.exists(), data: () => x.data() }), rethrow),
+        set: d => fs.setDoc(ref, d).catch(rethrow),
+        // updateDoc replaces a nested map wholesale, so ratings go in as r.<name> field paths to merge per person
+        update: d => {
+          const u = { ...d };
+          if (d.r) { delete u.r; for (const [k, v] of Object.entries(d.r)) u["r." + k] = v; }
+          return fs.updateDoc(ref, u).catch(rethrow);
+        },
+        delete: () => fs.deleteDoc(ref).catch(rethrow),
+      };
+    },
+    onSnapshot: (next, err) => fs.onSnapshot(col, q => next({ docs: q.docs.map(x => ({ id: x.id, data: () => x.data() })) }), err),
+  };
+}
+
+/* ---------- main ---------- */
+function update() {
+  save();
+  bagSel.value = state.bag; typeSel.value = state.type;
+  renderChips();
+  const F = filtered();
+  document.getElementById("fcount").textContent = `${F.length} af ${BEERS.length} øl`;
+  renderHero(F);
+  renderCalendars();
+  renderHitlist(F);
+  renderHater(F);
+  renderSmag(F);
+  renderBag(F);
+  renderStyles(F);
+  renderAlko(F);
+  renderPris(F);
+  renderQuiz(F);
+  renderYears();
+}
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { const F = filtered(); renderAlko(F); renderPris(F); }, 150); });
+update();
+tick(); setInterval(tick, 1000);
+
+// Live rows come from the artifact's shared db inside the claude.ai viewer, or from Firebase on the stand-alone site.
+// With neither (a saved copy, no Firebase settings) the page stays the static baked report.
+(async () => {
+  const c = window.claude;
+  let db = null;
+  if (c && typeof c.use === "function") { try { db = await c.use("db"); } catch (e) {} }
+  if (db) {
+    beersCol = db.collection("beers");
+    c.use("user").then(u => u ? u.can("data.write") : null).then(w => {
+      writable = w !== false; // null means the platform said nothing: offer the form and let a refused write decide
+      if (liveOn) { showLive(); renderCalendars(); refreshModal(); }
+    }, () => {});
+  } else if (DATA.firebase) {
+    try { beersCol = await firebaseBackend(DATA.firebase); } catch (e) { return; }
+  } else return;
+  beersCol.onSnapshot(snap => {
+    liveDocs = new Map(snap.docs.map(x => [x.id, x.data()]));
+    const wasAll = state.years.size === YEARS.length;
+    rebuild();
+    state.years = new Set([...state.years].filter(y => YEARS.includes(y)));
+    if (wasAll || !state.years.size) state.years = new Set(YEARS);
+    liveOn = true;
+    fillLists(); update(); refreshModal(); showLive();
+  }, () => { $("liveStatus").textContent = `Live ${LIVE} er ikke tilgængelig lige nu`; });
+})();
+})();
+</script>
+
+</body>
+</html>
