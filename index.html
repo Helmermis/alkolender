@@ -1567,7 +1567,8 @@ function showLive() {
   $("logoutBtn").hidden = !(auth && auth.user);
 }
 $("loginBtn").addEventListener("click", () => auth && auth.signIn().catch(e => {
-  if (e && e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") $("liveStatus").textContent = "Login mislykkedes. Prøv igen.";
+  if (e && e.code === "auth/popup-blocked") $("liveStatus").textContent = "Browseren blokerede login-vinduet. Tillad popups for siden og prøv igen.";
+  else if (e && e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") $("liveStatus").textContent = "Login mislykkedes. Prøv igen.";
 }));
 $("logoutBtn").addEventListener("click", () => auth && auth.signOut());
 
