@@ -666,7 +666,7 @@ footer .sign { font-family: var(--f-display); color: var(--gold); font-size: var
   <footer>
     <div class="wrap">
       <div class="sign">Skål og glædelig jul!</div>
-      <div>Data fra Julekalender data.xlsx, og det levende år direkte fra siden. Liter og genstande er regnet med 33 cl pr. øl. Øl uden pris eller procent tæller ikke med i de tal.</div>
+      <div> </div>
     </div>
   </footer>
 </div>
@@ -1632,7 +1632,8 @@ let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() 
 update();
 tick(); setInterval(tick, 1000);
 
-// Live rows come from the artifact's shared db inside the claude.ai viewer, or from Firebase on the stand-alone site.
+// Live rows come from the artifact's shared db inside the
+viewer, or from Firebase on the stand-alone site.
 // With neither (a saved copy, no Firebase settings) the page stays the static baked report.
 (async () => {
   const c = window.claude;
