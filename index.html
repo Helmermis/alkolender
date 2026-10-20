@@ -333,7 +333,8 @@ dialog::backdrop { background: rgba(4, 9, 25, .78); backdrop-filter: blur(3px); 
 .livetag { font-family: var(--f-mono); font-size: var(--t-xs); background: var(--pine); color: #fff; padding: 2px 8px; border-radius: 4px; letter-spacing: .12em; align-self: center; }
 .door.todo .lid { background: color-mix(in srgb, var(--lid) 40%, var(--night)); border-color: rgba(245,196,81,.5); }
 .door.todo .lid .d { opacity: .75; }
-.door.todo .lid .adv { top: auto; bottom: 7px; color: var(--gold); }
+.door.todo .lid .reg { position: absolute; bottom: 7px; left: 0; right: 0; text-align: center; font-size: .6rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+.cal-year h3 .secret { color: var(--gold); font-weight: 800; }
 .door.todo[disabled] { cursor: default; }
 .door.todo[disabled]:hover .lid { transform: none; }
 #entryDlg, #exportDlg { max-height: calc(100dvh - 24px); overflow-y: auto; }
@@ -927,49 +928,72 @@ function tick() {
 
 /* ---------- calendar ---------- */
 const LIDS = ["#c62a2d", "#1f7a5a", "#b02327", "#17654a", "#d23a3c", "#245a9e"];
-// The live year gets a full wall of 24 doors from the start; unregistered days are placeholders you click to register.
+// The live year gets a full wall from the start: 24 day doors plus the four advent Sundays.
+// Unregistered ones are placeholders you click to register.
 function calYears() {
   const ys = YEARS.filter(y => state.years.has(y));
   if (liveOn && !ys.includes(LIVE) && (state.years.size === YEARS.length || state.years.has(LIVE))) ys.push(LIVE);
   return ys.sort().reverse();
 }
+// 4th advent is the last Sunday on or before the 24th, the others a week apart before it
+function adventSundays(y) {
+  const eve = new Date(y, 11, 24), fourth = new Date(y, 11, 24 - eve.getDay());
+  return [1, 2, 3, 4].map(k => isoDay(new Date(fourth.getFullYear(), fourth.getMonth(), fourth.getDate() - (4 - k) * 7)));
+}
 function calList(y) {
   const list = BEERS.filter(b => b.y === y);
   if (y !== LIVE || !liveOn) return list;
-  const have = new Set(list.filter(b => !b.adv).map(b => b.d));
+  const have = new Set(list.map(b => dayKey(b.d, b.adv)));
   for (let d = 1; d <= 24; d++) {
     const ds = `${y}-12-${String(d).padStart(2, "0")}`;
-    if (!have.has(ds)) list.push({ ph: true, y, d: ds, adv: false, n: 0 });
+    if (!have.has(dayKey(ds, false))) list.push({ ph: true, y, d: ds, adv: false, n: 0 });
   }
+  adventSundays(y).forEach((ds, i) => { if (!have.has(dayKey(ds, true))) list.push({ ph: true, y, d: ds, adv: true, advNo: i + 1, n: 0 }); });
   return list.sort((a, b) => a.d.localeCompare(b.d) || a.adv - b.adv || a.n - b.n);
+}
+
+// The live year's best beer stays a secret in the heading until this viewer has opened its door.
+let revealed = new Set();
+try { revealed = new Set(JSON.parse(localStorage.getItem("alkolender-revealed") || "[]")); } catch (e) {}
+function reveal(ids) {
+  ids.forEach(id => revealed.add(id));
+  try { localStorage.setItem("alkolender-revealed", JSON.stringify([...revealed])); } catch (e) {}
+  document.querySelectorAll("[data-best]").forEach(el => { el.innerHTML = bestLabel(+el.dataset.best); });
+}
+const doorName = b => b.adv ? b.advNo + ". advent" : "låge " + dayLbl(b);
+function bestLabel(y) {
+  const best = BEERS.filter(b => b.y === y && matchNonYear(b) && b.avg != null).sort((a, b) => b.avg - a.avg)[0];
+  if (!best) return "";
+  if (best.live && !revealed.has(best.id)) return ` · bedst: <b class="secret">hemmelig</b>, åbn ${doorName(best)}`;
+  return ` · bedst: ${esc(best.name)}`;
 }
 function renderCalendars() {
   document.getElementById("calendars").innerHTML = calYears().map(y => {
     const list = calList(y), real = list.filter(b => !b.ph);
-    const shown = real.filter(matchNonYear);
-    const avg = mean(shown.map(b => b.avg).filter(v => v != null));
-    const best = [...shown].filter(b => b.avg != null).sort((a, b) => b.avg - a.avg)[0];
+    const avg = mean(real.filter(matchNonYear).map(b => b.avg).filter(v => v != null));
     const live = y === LIVE && liveOn;
-    return `<div class="cal-year"><h3>${y}${live ? ` <span class="livetag">LIVE</span>` : ""} <small>${real.length} ${live ? "af 24 " : ""}låger · snit ${fmt(avg)}${best ? ` · bedst: ${esc(best.name)}` : ""}</small></h3>
+    return `<div class="cal-year"><h3>${y}${live ? ` <span class="livetag">LIVE</span>` : ""} <small>${real.length} ${live ? `af ${list.length} ` : ""}låger · snit ${fmt(avg)}<span data-best="${y}">${bestLabel(y)}</span></small></h3>
       <div class="doors">${list.map((b, i) => {
         const big = !b.adv && dayLbl(b) === 24;
         const lid = b.adv ? "#0d1838" : LIDS[(i * 7 + y) % LIDS.length];
-        if (b.ph) return `<button class="door todo${big ? " big" : ""}" type="button" data-todo="${b.d}" style="--lid:${lid}" ${writable ? "" : "disabled"} aria-label="${esc(dateLbl(b))}: ${writable ? "registrér dagens øl" : "ikke registreret endnu"}">
-          <span class="lid"><span class="d">${dayLbl(b)}</span>${writable ? `<span class="adv">＋ registrér</span>` : ""}</span>
+        const face = b.adv ? `<span class="adv">${b.advNo}. advent</span><span class="d">★</span>` : `<span class="d">${dayLbl(b)}</span>`;
+        if (b.ph) return `<button class="door todo${big ? " big" : ""}" type="button" data-todo="${b.d}"${b.adv ? ` data-adv="1"` : ""} style="--lid:${lid}" ${writable ? "" : "disabled"} aria-label="${esc(b.adv ? b.advNo + ". advent, " + dateLbl(b) : dateLbl(b))}: ${writable ? "registrér øl" : "ikke registreret endnu"}">
+          <span class="lid">${face}${writable ? `<span class="reg">＋ registrér</span>` : ""}</span>
         </button>`;
         const open = state.open.has(b.id);
-        return `<button class="door${big ? " big" : ""}${open ? " open" : ""}${matchNonYear(b) ? "" : " dim"}" type="button" data-door="${b.id}" style="--lid:${lid}" aria-label="${esc(dateLbl(b))}: ${esc(b.name)}">
+        return `<button class="door${big ? " big" : ""}${open ? " open" : ""}${matchNonYear(b) ? "" : " dim"}" type="button" data-door="${b.id}" style="--lid:${lid}" aria-label="${esc(b.adv ? b.advNo + ". advent, " + dateLbl(b) : dateLbl(b))}${b.live && !open ? "" : ": " + esc(b.name)}">
           <span class="inside"><span class="score">${fmt(b.avg)}</span><span class="nm">${esc(b.name)}</span><span class="who">${esc(b.bag || "")}</span></span>
-          <span class="lid">${b.adv ? `<span class="adv">${b.advNo}. advent</span><span class="d">★</span>` : `<span class="d">${dayLbl(b)}</span>`}</span>
+          <span class="lid">${face}</span>
         </button>`;
       }).join("")}</div></div>`;
   }).join("");
 }
 document.getElementById("calendars").addEventListener("click", e => {
   const t = e.target.closest("[data-todo]");
-  if (t) { if (writable) openEntry({ d: t.dataset.todo }); return; }
+  if (t) { if (writable) openEntry({ d: t.dataset.todo, adv: t.dataset.adv === "1" }); return; }
   const d = e.target.closest("[data-door]"); if (!d) return;
   const id = d.dataset.door;
+  reveal([id]);
   if (!state.open.has(id)) {
     state.open.add(id); d.classList.add("open");
     setTimeout(() => openBeer(id), 520);
@@ -977,6 +1001,7 @@ document.getElementById("calendars").addEventListener("click", e => {
 });
 document.getElementById("openAll").addEventListener("click", () => {
   const doors = [...document.querySelectorAll(".door[data-door]")];
+  reveal(doors.map(d => d.dataset.door));
   doors.forEach((d, i) => setTimeout(() => { state.open.add(d.dataset.door); d.classList.add("open"); }, i * 18));
 });
 document.getElementById("closeAll").addEventListener("click", () => {
@@ -1405,10 +1430,10 @@ function defaultDay() {
 const decStr = v => v == null ? "" : String(+v.toFixed(4)).replace(".", ",");
 function msg(text, kind = "") { const m = $("fMsg"); m.textContent = text; m.className = "form-msg" + (kind ? " " + kind : ""); }
 
-function loadEntry(key, x, day) {
+function loadEntry(key, x, day, adv = false) {
   entry = { key: x ? key : null, orig: x || null };
   const v = x ? fromDoc(x) : null;
-  fld.date.value = v ? v.d : day; fld.adv.checked = v ? v.adv : false;
+  fld.date.value = v ? v.d : day; fld.adv.checked = v ? v.adv : adv;
   fld.n.value = v && v.n ? v.n : ""; fld.name.value = v && x.name ? v.name : ""; fld.brew.value = v ? v.brew || "" : "";
   fld.type.value = v ? v.type || "" : ""; fld.type2.value = v ? v.type2 || "" : "";
   fld.abv.value = v && v.abv != null ? decStr(v.abv * 100) : ""; fld.price.value = v && v.price != null ? decStr(v.price) : "";
@@ -1433,10 +1458,10 @@ function showHater() {
   $("fRates").querySelectorAll(".rate").forEach(el => el.classList.toggle("hater", hs.includes(el.dataset.p)));
   $("fHater").innerHTML = hs.length ? `Dagens Hater lige nu: <b>${hs.map(esc).join(" &amp; ")}</b> med ${fmt(r[hs[0]])}` : "Dagens Hater findes når mindst to har ratet.";
 }
-function openEntry({ key, d } = {}) {
+function openEntry({ key, d, adv = false } = {}) {
   if (!beersCol) return;
   if (key && liveDocs.has(key)) loadEntry(key, liveDocs.get(key));
-  else { const day = d || defaultDay(), k = dayKey(day, false); loadEntry(k, liveDocs.get(k), day); }
+  else { const day = d || defaultDay(), k = dayKey(day, adv); loadEntry(k, liveDocs.get(k), day, adv); }
   hideTip();
   if (!entryDlg.open) { if (entryDlg.showModal) entryDlg.showModal(); else entryDlg.setAttribute("open", ""); }
   (fld.name.value ? $("fRates").querySelector("select") : fld.name).focus();
