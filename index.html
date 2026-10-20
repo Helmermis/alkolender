@@ -828,7 +828,13 @@ try {
 const save = () => { try { localStorage.setItem("alkolender", JSON.stringify({ years: [...state.years], bag: state.bag, type: state.type })); } catch (e) {} };
 
 const matchNonYear = b => (!state.bag || b.bag === state.bag) && (!state.type || b.type === state.type);
-const filtered = () => BEERS.filter(b => state.years.has(b.y) && matchNonYear(b));
+// Live-year beers stay hidden everywhere but the calendar until this viewer opens their door
+// (kept per browser); opened doors stay open on the next visit, like a real advent calendar.
+let revealed = new Set();
+try { revealed = new Set(JSON.parse(localStorage.getItem("alkolender-revealed") || "[]")); } catch (e) {}
+revealed.forEach(id => state.open.add(id));
+const visible = b => !b.live || revealed.has(b.id);
+const filtered = () => BEERS.filter(b => visible(b) && state.years.has(b.y) && matchNonYear(b));
 const peopleIn = list => PEOPLE.filter(p => list.some(b => b.r[p] != null));
 
 /* ---------- tooltip ---------- */
@@ -871,10 +877,10 @@ yearChips.addEventListener("click", e => {
   update();
 });
 const bagSel = document.getElementById("bagSel"), typeSel = document.getElementById("typeSel");
-const uniq = f => [...new Set(BEERS.map(f).filter(Boolean))].sort((a, b) => a.localeCompare(b, "da"));
+const uniq = f => [...new Set(BEERS.filter(visible).map(f).filter(Boolean))].sort((a, b) => a.localeCompare(b, "da"));
 // filter selects and the entry form's suggestions follow the data, which grows as live rows arrive
 function fillLists() {
-  const bags = PEOPLE.filter(p => BEERS.some(b => b.bag === p));
+  const bags = PEOPLE.filter(p => BEERS.some(b => visible(b) && b.bag === p));
   bagSel.innerHTML = `<option value="">Alle</option>` + bags.map(p => `<option>${esc(p)}</option>`).join("");
   typeSel.innerHTML = `<option value="">Alle</option>` + uniq(b => b.type).map(t => `<option>${esc(t)}</option>`).join("");
   bagSel.value = state.bag; typeSel.value = state.type;
@@ -952,13 +958,16 @@ function calList(y) {
   return list.sort((a, b) => a.d.localeCompare(b.d) || a.adv - b.adv || a.n - b.n);
 }
 
-// The live year's best beer stays a secret in the heading until this viewer has opened its door.
-let revealed = new Set();
-try { revealed = new Set(JSON.parse(localStorage.getItem("alkolender-revealed") || "[]")); } catch (e) {}
-function reveal(ids) {
-  ids.forEach(id => revealed.add(id));
+// Opening a door reveals it: the heading label updates at once, the rest once the door has swung open.
+let revealTimer;
+function reveal(ids, delay = 700) {
+  const fresh = ids.filter(id => id.startsWith("l-") && !revealed.has(id));
+  if (!fresh.length) return;
+  fresh.forEach(id => revealed.add(id));
   try { localStorage.setItem("alkolender-revealed", JSON.stringify([...revealed])); } catch (e) {}
   document.querySelectorAll("[data-best]").forEach(el => { el.innerHTML = bestLabel(+el.dataset.best); });
+  clearTimeout(revealTimer);
+  revealTimer = setTimeout(() => { fillLists(); update(); refreshModal(); }, delay);
 }
 const doorName = b => b.adv ? b.advNo + ". advent" : "låge " + dayLbl(b);
 function bestLabel(y) {
@@ -970,7 +979,7 @@ function bestLabel(y) {
 function renderCalendars() {
   document.getElementById("calendars").innerHTML = calYears().map(y => {
     const list = calList(y), real = list.filter(b => !b.ph);
-    const avg = mean(real.filter(matchNonYear).map(b => b.avg).filter(v => v != null));
+    const avg = mean(real.filter(b => visible(b) && matchNonYear(b)).map(b => b.avg).filter(v => v != null));
     const live = y === LIVE && liveOn;
     return `<div class="cal-year"><h3>${y}${live ? ` <span class="livetag">LIVE</span>` : ""} <small>${real.length} ${live ? `af ${list.length} ` : ""}låger · snit ${fmt(avg)}<span data-best="${y}">${bestLabel(y)}</span></small></h3>
       <div class="doors">${list.map((b, i) => {
@@ -993,16 +1002,17 @@ document.getElementById("calendars").addEventListener("click", e => {
   if (t) { if (writable) openEntry({ d: t.dataset.todo, adv: t.dataset.adv === "1" }); return; }
   const d = e.target.closest("[data-door]"); if (!d) return;
   const id = d.dataset.door;
-  reveal([id]);
   if (!state.open.has(id)) {
     state.open.add(id); d.classList.add("open");
+    reveal([id]);
     setTimeout(() => openBeer(id), 520);
-  } else openBeer(id);
+  } else { reveal([id]); openBeer(id); }
 });
 document.getElementById("openAll").addEventListener("click", () => {
   const doors = [...document.querySelectorAll(".door[data-door]")];
-  reveal(doors.map(d => d.dataset.door));
-  doors.forEach((d, i) => setTimeout(() => { state.open.add(d.dataset.door); d.classList.add("open"); }, i * 18));
+  doors.forEach(d => state.open.add(d.dataset.door));
+  reveal(doors.map(d => d.dataset.door), doors.length * 18 + 700);
+  doors.forEach((d, i) => setTimeout(() => d.classList.add("open"), i * 18));
 });
 document.getElementById("closeAll").addEventListener("click", () => {
   state.open.clear(); document.querySelectorAll(".door.open").forEach(d => d.classList.remove("open"));
@@ -1280,7 +1290,7 @@ function renderQuiz(F) {
 }
 
 function renderYears() {
-  const B = BEERS.filter(matchNonYear);
+  const B = BEERS.filter(b => visible(b) && matchNonYear(b));
   const per = y => B.filter(b => b.y === y);
   const row = fn => YEARS.map(y => { const l = per(y); return { k: String(y), v: l.length ? fn(l) : null, n: l.length }; });
   const el = document.getElementById("mults");
@@ -1298,7 +1308,7 @@ const dlg = document.getElementById("dlg");
 let modalList = [], modalIdx = 0;
 function openBeer(id) {
   const F = filtered();
-  modalList = F.some(b => b.id === id) ? F : BEERS;
+  modalList = F.some(b => b.id === id) ? F : BEERS.filter(b => visible(b) || b.id === id);
   modalIdx = modalList.findIndex(b => b.id === id);
   drawBeer();
   hideTip();
@@ -1351,7 +1361,7 @@ function refreshModal() {
   const id = modalList[modalIdx].id;
   if (!BEERS.some(b => b.id === id)) { dlg.close(); return; }
   const F = filtered();
-  modalList = F.some(b => b.id === id) ? F : BEERS;
+  modalList = F.some(b => b.id === id) ? F : BEERS.filter(b => visible(b) || b.id === id);
   modalIdx = modalList.findIndex(b => b.id === id);
   drawBeer();
 }
@@ -1535,6 +1545,7 @@ ef.addEventListener("submit", async e => {
       } else await ref.set({ ...details, r: given, created: details.updated });
     }
     entry = { key, orig: { ...details, r: given } };
+    state.open.add("l-" + key); reveal(["l-" + key]); // whoever registers a beer already knows it
     msg(isNew ? "Gemt. Skål!" : "Rettelserne er gemt.", "ok");
     if (isNew) celebrate();
     setTimeout(() => { if (entryDlg.open && entry.key === key) entryDlg.close(); }, 700);
@@ -1646,7 +1657,7 @@ function update() {
   bagSel.value = state.bag; typeSel.value = state.type;
   renderChips();
   const F = filtered();
-  document.getElementById("fcount").textContent = `${F.length} af ${BEERS.length} øl`;
+  document.getElementById("fcount").textContent = `${F.length} af ${BEERS.filter(visible).length} øl`;
   renderHero(F);
   renderCalendars();
   renderHitlist(F);
