@@ -1632,8 +1632,7 @@ let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() 
 update();
 tick(); setInterval(tick, 1000);
 
-// Live rows come from the artifact's shared db inside the
-viewer, or from Firebase on the stand-alone site.
+// Live rows come from the artifact's shared db inside the viewer, or from Firebase on the stand-alone site.
 // With neither (a saved copy, no Firebase settings) the page stays the static baked report.
 (async () => {
   const c = window.claude;
